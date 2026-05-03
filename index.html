@@ -2405,23 +2405,37 @@ let gapi, isInitialized = false, isSignedIn = false;
 
 async function initializeGoogleSheets() {
     try {
-        console.log('🔍 Verificando credenciales...');
-        console.log('API Key:', GOOGLE_CONFIG.apiKey ? 'Presente' : 'FALTANTE');
-        console.log('Client ID:', GOOGLE_CONFIG.clientId ? 'Presente' : 'FALTANTE');
-        console.log('Spreadsheet ID:', GOOGLE_CONFIG.spreadsheetId ? 'Presente' : 'FALTANTE');
+        console.log('🔍 Iniciando conexión con Google Sheets...');
         
-        // Test básico - solo mostrar el botón de conexión manual
-        showMessage('mainMessage', '⚠️ Conexión automática falló. Usaremos sincronización manual por ahora.', 'warning');
-        
-        // Agregar botón manual en el header
-        const syncButton = document.createElement('button');
-        syncButton.innerHTML = '<i class="fas fa-sync"></i> Conectar Google';
-        syncButton.className = 'btn btn-small';
-        syncButton.onclick = manualGoogleConnect;
-        document.querySelector('.user-info').prepend(syncButton);
+        // Evitar conflictos - usar setTimeout
+        setTimeout(async () => {
+            try {
+                if (typeof gapi === 'undefined') {
+                    console.log('⚠️ GAPI no disponible, usando modo local');
+                    return;
+                }
+                
+                await gapi.load('client:auth2', async () => {
+                    await gapi.client.init({
+                        apiKey: GOOGLE_CONFIG.apiKey,
+                        clientId: GOOGLE_CONFIG.clientId,
+                        scope: GOOGLE_CONFIG.scope,
+                        discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4']
+                    });
+                    
+                    isInitialized = true;
+                    isSignedIn = gapi.auth2.getAuthInstance().isSignedIn.get();
+                    console.log('🎉 Google Sheets conectado!');
+                    updateSyncStatus();
+                });
+                
+            } catch (error) {
+                console.log('⚠️ Usando modo local:', error.message);
+            }
+        }, 2000);
         
     } catch (error) {
-        console.error('❌ Error en verificación:', error);
+        console.log('⚠️ Continuando en modo local');
     }
 }
 
