@@ -2414,22 +2414,34 @@ async function initializeGoogleSheets() {
                 script.src = 'https://apis.google.com/js/api.js';
                 script.onload = () => {
                     console.log('📦 Google API cargada');
-                    resolve();
+                    // Esperar un poco más después de cargar
+                    setTimeout(resolve, 1000);
                 };
                 script.onerror = () => reject('Error cargando Google API');
                 document.head.appendChild(script);
             });
         }
         
-        // Esperar un poco más e intentar conexión
-        setTimeout(async () => {
-            try {
-                console.log('🔗 Iniciando conexión...');
-                
-                await gapi.load('client:auth2', async () => {
-                    console.log('🔑 Inicializando con credenciales...');
+        // Verificar que gapi.load existe antes de usarlo
+        let attempts = 0;
+        while ((!window.gapi || !window.gapi.load) && attempts < 10) {
+            console.log(`⏳ Esperando gapi.load (intento ${attempts + 1})`);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            attempts++;
+        }
+        
+        if (!window.gapi || !window.gapi.load) {
+            throw new Error('gapi.load no disponible después de esperar');
+        }
+        
+        console.log('🔗 gapi.load disponible, conectando...');
+        
+        await new Promise((resolve, reject) => {
+            window.gapi.load('client:auth2', async () => {
+                try {
+                    console.log('🔑 Inicializando cliente...');
                     
-                    await gapi.client.init({
+                    await window.gapi.client.init({
                         apiKey: GOOGLE_CONFIG.apiKey,
                         clientId: GOOGLE_CONFIG.clientId,
                         scope: GOOGLE_CONFIG.scope,
@@ -2437,19 +2449,22 @@ async function initializeGoogleSheets() {
                     });
                     
                     isInitialized = true;
-                    isSignedIn = gapi.auth2.getAuthInstance().isSignedIn.get();
+                    isSignedIn = window.gapi.auth2.getAuthInstance().isSignedIn.get();
                     console.log('🎉 ¡Google Sheets conectado exitosamente!');
                     updateSyncStatus();
-                });
-                
-            } catch (error) {
-                console.log('⚠️ Error en conexión:', error);
-                showMessage('mainMessage', 'Modo local activo - usa Export/Import para sincronizar', 'info');
-            }
-        }, 3000);
+                    resolve();
+                    
+                } catch (error) {
+                    console.error('❌ Error en init:', error);
+                    reject(error);
+                }
+            });
+        });
         
     } catch (error) {
-        console.log('⚠️ Error cargando API:', error);
+        console.log('⚠️ Google Sheets no disponible:', error.message);
+        console.log('💾 Continuando en modo local con Export/Import');
+        showMessage('mainMessage', 'Modo local activo - usa Export/Import para sincronizar', 'info');
     }
 }
 
