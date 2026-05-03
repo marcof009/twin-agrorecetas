@@ -2405,40 +2405,28 @@ let gapi, isInitialized = false, isSignedIn = false;
 
 async function initializeGoogleSheets() {
     try {
-        // Cargar Google API dinámicamente
-        if (!window.gapi) {
-            await new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.src = 'https://apis.google.com/js/api.js';
-                script.onload = resolve;
-                script.onerror = reject;
-                document.head.appendChild(script);
-            });
-        }
-
-        // Inicializar gapi
-        await new Promise((resolve) => {
-            window.gapi.load('client:auth2', resolve);
-        });
-
-        await window.gapi.client.init({
-            apiKey: GOOGLE_CONFIG.apiKey,
-            clientId: GOOGLE_CONFIG.clientId,
-            scope: GOOGLE_CONFIG.scope,
-            discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4']
-        });
-
-        isInitialized = true;
-        const authInstance = window.gapi.auth2.getAuthInstance();
-        isSignedIn = authInstance.isSignedIn.get();
+        console.log('🔍 Verificando credenciales...');
+        console.log('API Key:', GOOGLE_CONFIG.apiKey ? 'Presente' : 'FALTANTE');
+        console.log('Client ID:', GOOGLE_CONFIG.clientId ? 'Presente' : 'FALTANTE');
+        console.log('Spreadsheet ID:', GOOGLE_CONFIG.spreadsheetId ? 'Presente' : 'FALTANTE');
         
-        console.log('🎉 Google Sheets conectado exitosamente');
-        updateSyncStatus();
+        // Test básico - solo mostrar el botón de conexión manual
+        showMessage('mainMessage', '⚠️ Conexión automática falló. Usaremos sincronización manual por ahora.', 'warning');
+        
+        // Agregar botón manual en el header
+        const syncButton = document.createElement('button');
+        syncButton.innerHTML = '<i class="fas fa-sync"></i> Conectar Google';
+        syncButton.className = 'btn btn-small';
+        syncButton.onclick = manualGoogleConnect;
+        document.querySelector('.user-info').prepend(syncButton);
         
     } catch (error) {
-        console.error('❌ Error conectando Google Sheets:', error);
-        showMessage('mainMessage', 'Error conectando con Google Sheets: ' + error.message, 'error');
+        console.error('❌ Error en verificación:', error);
     }
+}
+
+function manualGoogleConnect() {
+    showMessage('mainMessage', 'Función manual en desarrollo. Por ahora usa Export/Import para sincronizar.', 'info');
 }
         async function signInToGoogle() {
     if (!isInitialized) {
