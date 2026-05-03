@@ -2406,32 +2406,33 @@ let gapi, isInitialized = false, isSignedIn = false;
 
 async function initializeGoogleSheets() {
     try {
-        await new Promise(resolve => {
-            if (window.gapi) {
+        // Esperar a que gapi esté disponible
+        await new Promise((resolve) => {
+            if (window.gapi && window.gapi.load) {
                 resolve();
             } else {
-                const script = document.createElement('script');
-                script.src = 'https://apis.google.com/js/api.js';
-                script.onload = resolve;
-                document.head.appendChild(script);
+                setTimeout(resolve, 1000);
             }
         });
 
-        await window.gapi.load('client:auth2', async () => {
-            await window.gapi.client.init({
-                apiKey: GOOGLE_CONFIG.apiKey,
-                clientId: GOOGLE_CONFIG.clientId,
-                scope: GOOGLE_CONFIG.scope,
-                discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4']
-            });
-
-            isInitialized = true;
-            const authInstance = window.gapi.auth2.getAuthInstance();
-            isSignedIn = authInstance.isSignedIn.get();
-            
-            console.log('Google Sheets API inicializada');
-            updateSyncStatus();
+        await new Promise((resolve) => {
+            window.gapi.load('client:auth2', resolve);
         });
+
+        await window.gapi.client.init({
+            apiKey: GOOGLE_CONFIG.apiKey,
+            clientId: GOOGLE_CONFIG.clientId,
+            scope: GOOGLE_CONFIG.scope,
+            discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4']
+        });
+
+        isInitialized = true;
+        const authInstance = window.gapi.auth2.getAuthInstance();
+        isSignedIn = authInstance.isSignedIn.get();
+        
+        console.log('Google Sheets API inicializada correctamente');
+        updateSyncStatus();
+        
     } catch (error) {
         console.error('Error inicializando Google Sheets:', error);
         showMessage('mainMessage', 'Error conectando con Google Sheets', 'error');
