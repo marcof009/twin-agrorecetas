@@ -2266,7 +2266,19 @@ function updateProduct(id) {
         document.getElementById('productName').value = '';
         document.getElementById('productActive').value = '';
         document.getElementById('productCategory').value = '';
-        document.getE
+        document.getElementById('productDosisMin').value = '';
+        document.getElementById('productDosisMax').value = '';
+        document.getElementById('productUnidad').value = 'L/ha';
+        document.getElementById('productForm').classList.add('hidden');
+        
+        const form = document.querySelector('#productForm form');
+        form.onsubmit = addProduct;
+        const submitBtn = document.querySelector('#productForm button[type="submit"]');
+        submitBtn.innerHTML = 'Guardar Producto';
+        
+        showMessage('mainMessage', 'Producto actualizado exitosamente', 'success');
+    }
+}
         function showMessage(containerId, text, type) {
             const container = document.getElementById(containerId);
             const iconMap = {
