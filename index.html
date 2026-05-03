@@ -819,7 +819,34 @@
                         </div>
                     </div>
                 </div>
+<div class="import-section">
+    <div class="import-title">
+        <i class="fas fa-download"></i>
+        Exportar Todos los Datos
+    </div>
+    <p style="color: var(--text-light); margin-bottom: 1rem;">
+        Descarga todos tus datos para sincronizar con otros dispositivos
+    </p>
+    <button type="button" class="btn" onclick="exportAllData()">
+        <i class="fas fa-download"></i>
+        Exportar Todo
+    </button>
+</div>
 
+<div class="import-section">
+    <div class="import-title">
+        <i class="fas fa-upload"></i>
+        Importar Todos los Datos
+    </div>
+    <p style="color: var(--text-light); margin-bottom: 1rem;">
+        Importa datos completos desde otro dispositivo
+    </p>
+    <input type="file" id="allDataFile" class="file-input" accept=".json" onchange="importAllData()">
+    <label for="allDataFile" class="file-label">
+        <i class="fas fa-file-upload"></i>
+        Seleccionar archivo de datos
+    </label>
+</div>
                 <!-- Clients Section -->
                 <div id="clients" class="section">
                     <div class="content-card">
@@ -2301,6 +2328,70 @@ function updateProduct(id) {
                 container.innerHTML = '';
             }, 5000);
         }
+function exportAllData() {
+    const allData = {
+        clients: clients,
+        lotes: lotes,
+        products: products,
+        recipes: recipes,
+        users: users,
+        timestamp: new Date().toISOString(),
+        version: "1.0"
+    };
+    
+    const dataStr = JSON.stringify(allData, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    
+    const now = new Date();
+    const dateStr = now.toISOString().split('T')[0];
+    link.download = `twin-agrorecetas-${dateStr}.json`;
+    
+    link.click();
+    showMessage('mainMessage', 'Datos exportados exitosamente', 'success');
+}
+
+function importAllData() {
+    const fileInput = document.getElementById('allDataFile');
+    const file = fileInput.files[0];
+    
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const importedData = JSON.parse(e.target.result);
+            
+            // Verificar estructura del archivo
+            if (!importedData.clients || !importedData.timestamp) {
+                throw new Error('Archivo de datos inválido');
+            }
+            
+            // Confirmar importación
+            if (confirm(`¿Importar datos del ${new Date(importedData.timestamp).toLocaleString()}? Esto reemplazará todos los datos actuales.`)) {
+                clients = importedData.clients || [];
+                lotes = importedData.lotes || [];
+                products = importedData.products || [];
+                recipes = importedData.recipes || [];
+                users = importedData.users || [];
+                
+                saveData();
+                loadAllSections();
+                loadDashboardData();
+                
+                showMessage('mainMessage', 'Datos importados exitosamente. ¡Sincronización completa!', 'success');
+            }
+            
+            fileInput.value = '';
+        } catch (error) {
+            console.error('Error importando datos:', error);
+            showMessage('mainMessage', 'Error al importar datos: ' + error.message, 'error');
+        }
+    };
+    
+    reader.readAsText(file);
+}
     </script>
 </body>
 </html>
