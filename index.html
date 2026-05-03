@@ -1021,49 +1021,100 @@
                         </div>
 
                         <div id="recipeForm" class="hidden">
-                            <h3>Crear Nueva Receta</h3>
-                            <div class="form-grid">
-                                <div class="form-group">
-                                    <label for="recipeClient">Cliente</label>
-                                    <select id="recipeClient" required onchange="loadClientLotes()">
-                                        <option value="">Seleccionar cliente</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="recipeLote">Lote</label>
-                                    <select id="recipeLote" required onchange="updateLoteInfo()">
-                                        <option value="">Seleccionar lote</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="recipeHectareas">Hectáreas a aplicar</label>
-                                    <input type="number" id="recipeHectareas" step="0.1" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="recipeObjetivo">Objetivo</label>
-                                    <select id="recipeObjetivo" required>
-                                        <option value="">Seleccionar objetivo</option>
-                                        <option value="barbecho">Barbecho</option>
-                                        <option value="pre-emergente">Pre-emergente</option>
-                                        <option value="post-emergente">Post-emergente</option>
-                                        <option value="insecticida">Insecticida</option>
-                                        <option value="fungicida">Fungicida</option>
-                                        <option value="fertilizacion">Fertilización</option>
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="recipeObservaciones">Observaciones</label>
-                                <textarea id="recipeObservaciones" rows="3" placeholder="Observaciones adicionales..."></textarea>
-                            </div>
+    <h3>Crear Nueva Receta</h3>
+    <div class="form-grid">
+        <div class="form-group">
+            <label for="recipeClient">Cliente</label>
+            <select id="recipeClient" required onchange="loadClientLotes()">
+                <option value="">Seleccionar cliente</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="recipeCampo">Campo</label>
+            <select id="recipeCampo" required onchange="loadCampoLotes()">
+                <option value="">Seleccionar campo</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="recipeLote">Lote</label>
+            <select id="recipeLote" required onchange="updateLoteInfo()">
+                <option value="">Seleccionar lote</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="recipeHectareas">Superficie (ha)</label>
+            <input type="number" id="recipeHectareas" step="0.1" required readonly>
+        </div>
+        <div class="form-group">
+            <label for="recipeObjetivo">Objetivo</label>
+            <select id="recipeObjetivo" required>
+                <option value="">Seleccionar objetivo</option>
+                <option value="barbecho">Barbecho</option>
+                <option value="pre-emergente">Pre-emergente</option>
+                <option value="post-emergente">Post-emergente</option>
+                <option value="insecticida">Insecticida</option>
+                <option value="fungicida">Fungicida</option>
+                <option value="fertilizacion">Fertilización</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="recipeUrgencia">Urgencia</label>
+            <select id="recipeUrgencia" required>
+                <option value="">Seleccionar urgencia</option>
+                <option value="ya">YA</option>
+                <option value="2-3-dias">2-3 días</option>
+                <option value="5-7-dias">5-7 días</option>
+                <option value="7-10-dias">7-10 días</option>
+                <option value="15-dias">15 días</option>
+                <option value="otro">Otro</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="recipeCaudal">Caudal Sugerido (L/ha)</label>
+            <input type="number" id="recipeCaudal" step="0.1" placeholder="100" required>
+        </div>
+    </div>
 
-                            <div class="form-group">
-                                <button type="button" class="btn" onclick="saveRecipe()">
-                                    Guardar Receta
-                                </button>
-                            </div>
-                        </div>
+    <div class="form-group" style="margin-top: 2rem;">
+        <h4>Productos a Aplicar</h4>
+        <div style="display: flex; gap: 1rem; align-items: end; margin-bottom: 1rem;">
+            <div style="flex: 2;">
+                <label for="productSearch">Buscar Producto</label>
+                <select id="productSearch">
+                    <option value="">Seleccionar producto</option>
+                </select>
+            </div>
+            <div style="flex: 1;">
+                <label for="productDosis">Dosis</label>
+                <input type="number" id="productDosis" step="0.01" placeholder="2.5">
+            </div>
+            <div style="flex: 1;">
+                <label for="productUnit">Unidad</label>
+                <input type="text" id="productUnit" readonly placeholder="L/ha">
+            </div>
+            <div>
+                <button type="button" class="btn btn-secondary btn-small" onclick="addProductToRecipe()">
+                    <i class="fas fa-plus"></i> Agregar
+                </button>
+            </div>
+        </div>
+        
+        <div id="selectedProducts">
+            <!-- Productos seleccionados aparecen aquí -->
+        </div>
+    </div>
+    
+    <div class="form-group">
+        <label for="recipeObservaciones">Observaciones</label>
+        <textarea id="recipeObservaciones" rows="3" placeholder="Observaciones adicionales..."></textarea>
+    </div>
+
+    <div class="form-group">
+        <button type="button" class="btn" onclick="saveRecipe()">
+            <i class="fas fa-save"></i> Guardar Receta
+        </button>
+    </div>
+</div>
 
                         <div id="recipesList">
                             <p>Cargando recetas...</p>
