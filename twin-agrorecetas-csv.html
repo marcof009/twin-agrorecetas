@@ -1,0 +1,1979 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TWIN AgroRecetas - Gestión de Pulverizaciones</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://apis.google.com/js/api.js"></script>
+    <style>
+        :root {
+            --primary: #2d5a27;
+            --primary-light: #4a8442;
+            --secondary: #e8f5e8;
+            --accent: #ff7b00;
+            --background: #fefffe;
+            --surface: #ffffff;
+            --text: #1a2e1a;
+            --text-light: #6b8e6b;
+            --border: #d4e7d4;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --error: #e74c3c;
+            --shadow: rgba(45, 90, 39, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, var(--background) 0%, var(--secondary) 100%);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .hidden { display: none !important; }
+
+        header {
+            background: var(--surface);
+            box-shadow: 0 4px 20px var(--shadow);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .twins-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.05rem;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--accent);
+            letter-spacing: 0.05em;
+        }
+
+        .twins-letter {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+        }
+
+        .twins-corn-small {
+            display: flex;
+            align-items: center;
+            margin: 0 0.05rem;
+            animation: sway 4s ease-in-out infinite;
+        }
+
+        .main-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .main-title i {
+            font-size: 1.5rem;
+            color: var(--accent);
+        }
+
+        @keyframes sway {
+            0%, 100% { transform: rotate(-2deg); }
+            50% { transform: rotate(2deg); }
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .sync-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        .sync-connected {
+            color: var(--success);
+        }
+
+        .sync-error {
+            color: var(--error);
+        }
+
+        .logout-btn {
+            background: var(--error);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        main {
+            flex: 1;
+            padding: 2rem;
+        }
+
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+        }
+
+        .login-card {
+            background: var(--surface);
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .login-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .login-subtitle {
+            color: var(--text-light);
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            background: var(--surface);
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(45, 90, 39, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .btn:hover {
+            background: var(--primary-light);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(45, 90, 39, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--accent);
+        }
+
+        .btn-secondary:hover {
+            background: #e6690a;
+        }
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            width: auto;
+            margin: 0.25rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px var(--shadow);
+            border-left: 4px solid var(--primary);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px var(--shadow);
+        }
+
+        .stat-card h3 {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sections-nav {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .section {
+            display: none;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .content-card {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 8px 30px var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .import-section {
+            background: var(--secondary);
+            border: 2px dashed var(--primary);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .import-title {
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-label {
+            background: var(--primary);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .file-label:hover {
+            background: var(--primary-light);
+            transform: translateY(-2px);
+        }
+
+        .csv-template {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            text-align: left;
+        }
+
+        .csv-example {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            background: #f8f9fa;
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin-top: 0.5rem;
+            color: #333;
+            overflow-x: auto;
+        }
+
+        .message {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .message-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .message-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            background: var(--surface);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px var(--shadow);
+        }
+
+        .data-table th {
+            background: var(--primary);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table tr:hover {
+            background: var(--secondary);
+        }
+
+        .delete-btn {
+            background: var(--error);
+            color: white;
+            border: none;
+            padding: 0.5rem 0.75rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            background: #c0392b;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            main {
+                padding: 1rem;
+            }
+            
+            .login-card {
+                margin: 1rem;
+                padding: 2rem;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .sections-nav {
+                flex-direction: column;
+            }
+
+            .card-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .card-actions {
+                width: 100%;
+            }
+
+            .import-section {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Login Screen -->
+        <div id="loginScreen" class="login-container">
+            <div class="login-card">
+                <div class="login-logo" style="margin-bottom: 2rem;">
+                    <div class="twins-brand" style="justify-content: center; font-size: 1.5rem; margin-bottom: 1rem;">
+                        <span class="twins-letter">T</span>
+                        <span class="twins-letter">W</span>
+                        <span class="twins-corn-small">
+                            <svg viewBox="0 0 24 48" width="18" height="36">
+                                <defs>
+                                    <linearGradient id="cornGradientLogin" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+                                        <stop offset="50%" style="stop-color:#FFA500;stop-opacity:1" />
+                                        <stop offset="100%" style="stop-color:#FF8C00;stop-opacity:1" />
+                                    </linearGradient>
+                                </defs>
+                                <ellipse cx="12" cy="25" rx="5" ry="15" fill="url(#cornGradientLogin)"/>
+                                <circle cx="10" cy="18" r="1" fill="#FFE55C" opacity="0.8"/>
+                                <circle cx="14" cy="18" r="1" fill="#FFE55C" opacity="0.8"/>
+                                <circle cx="12" cy="20" r="1" fill="#FFE55C" opacity="0.8"/>
+                                <circle cx="10" cy="22" r="1" fill="#FFE55C" opacity="0.8"/>
+                                <circle cx="14" cy="22" r="1" fill="#FFE55C" opacity="0.8"/>
+                                <circle cx="12" cy="24" r="1" fill="#FFE55C" opacity="0.8"/>
+                                <circle cx="10" cy="26" r="1" fill="#FFE55C" opacity="0.8"/>
+                                <circle cx="14" cy="26" r="1" fill="#FFE55C" opacity="0.8"/>
+                                <circle cx="12" cy="28" r="1" fill="#FFE55C" opacity="0.8"/>
+                                <circle cx="10" cy="30" r="1" fill="#FFE55C" opacity="0.8"/>
+                                <circle cx="14" cy="30" r="1" fill="#FFE55C" opacity="0.8"/>
+                            </svg>
+                        </span>
+                        <span class="twins-letter">N</span>
+                    </div>
+                    <i class="fas fa-seedling" style="font-size: 3rem; color: var(--accent);"></i>
+                </div>
+                <h1 class="login-title">AgroRecetas</h1>
+                <p class="login-subtitle">Gestión profesional de recetas de pulverización</p>
+                <div id="loginMessage"></div>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" autocomplete="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Contraseña</label>
+                        <input type="password" id="password" name="password" autocomplete="current-password" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label style="display: flex; align-items: center; cursor: pointer; font-size: 0.9rem; color: var(--text-light);">
+                            <input type="checkbox" id="rememberMe" style="margin-right: 0.5rem; transform: scale(1.2);">
+                            <span>Recordar mis datos en este dispositivo</span>
+                        </label>
+                    </div>
+                    <button type="submit" class="btn" id="loginBtn">Iniciar Sesión</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Main App -->
+        <div id="appContent" class="hidden">
+            <header>
+                <div class="header-content">
+                    <div class="logo">
+                        <div class="twins-brand">
+                            <span class="twins-letter">T</span>
+                            <span class="twins-letter">W</span>
+                            <span class="twins-corn-small">
+                                <svg viewBox="0 0 24 48" width="12" height="24">
+                                    <defs>
+                                        <linearGradient id="cornGradientSmall" x1="0%" y1="0%" x2="0%" y2="100%">
+                                            <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+                                            <stop offset="50%" style="stop-color:#FFA500;stop-opacity:1" />
+                                            <stop offset="100%" style="stop-color:#FF8C00;stop-opacity:1" />
+                                        </linearGradient>
+                                    </defs>
+                                    <ellipse cx="12" cy="25" rx="4" ry="12" fill="url(#cornGradientSmall)"/>
+                                    <circle cx="10" cy="20" r="0.8" fill="#FFE55C" opacity="0.8"/>
+                                    <circle cx="14" cy="20" r="0.8" fill="#FFE55C" opacity="0.8"/>
+                                    <circle cx="12" cy="22" r="0.8" fill="#FFE55C" opacity="0.8"/>
+                                </svg>
+                            </span>
+                            <span class="twins-letter">N</span>
+                        </div>
+                        <div class="main-title">
+                            <i class="fas fa-seedling"></i>
+                            <span>AgroRecetas</span>
+                        </div>
+                    </div>
+                    <div class="user-info">
+                        <div class="sync-status" id="syncStatus">
+                            <i class="fas fa-database"></i>
+                            <span>Datos Locales</span>
+                        </div>
+                        <span id="currentUser">Usuario</span>
+                        <button class="logout-btn" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i> Salir
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <main>
+                <div id="mainMessage"></div>
+
+                <!-- Dashboard Stats -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3 id="stat1Title">Recetas Pendientes</h3>
+                        <div class="stat-number">
+                            <i class="fas fa-clock" id="stat1Icon"></i>
+                            <span id="stat1Value">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="stat2Title">Completadas Hoy</h3>
+                        <div class="stat-number">
+                            <i class="fas fa-check-circle" id="stat2Icon"></i>
+                            <span id="stat2Value">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="stat3Title">Hectáreas (15 días)</h3>
+                        <div class="stat-number">
+                            <i class="fas fa-map" id="stat3Icon"></i>
+                            <span id="stat3Value">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="stat4Title">Finalizadas (Año)</h3>
+                        <div class="stat-number">
+                            <i class="fas fa-chart-line" id="stat4Icon"></i>
+                            <span id="stat4Value">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation -->
+                <div class="sections-nav">
+                    <button class="nav-btn active" onclick="showSection('dashboard', this)">
+                        <i class="fas fa-tachometer-alt"></i>
+                        Dashboard
+                    </button>
+                    <button class="nav-btn" onclick="showSection('clients', this)">
+                        <i class="fas fa-users"></i>
+                        Clientes
+                    </button>
+                    <button class="nav-btn" onclick="showSection('lotes', this)">
+                        <i class="fas fa-map"></i>
+                        Lotes
+                    </button>
+                    <button class="nav-btn" onclick="showSection('products', this)">
+                        <i class="fas fa-flask"></i>
+                        Productos
+                    </button>
+                    <button class="nav-btn" onclick="showSection('recipes', this)">
+                        <i class="fas fa-file-prescription"></i>
+                        Recetas
+                    </button>
+                    <button class="nav-btn" onclick="showSection('import', this)">
+                        <i class="fas fa-upload"></i>
+                        Importar Datos
+                    </button>
+                </div>
+
+                <!-- Dashboard Section -->
+                <div id="dashboard" class="section active">
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-chart-pie"></i>
+                                Resumen de Actividad
+                            </h2>
+                        </div>
+                        <div id="dashboardContent">
+                            <p>Cargando datos...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Import Section -->
+                <div id="import" class="section">
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-upload"></i>
+                                Importar Datos Masivos
+                            </h2>
+                        </div>
+                        
+                        <div class="import-section">
+                            <div class="import-title">
+                                <i class="fas fa-file-csv"></i>
+                                Importar Clientes
+                            </div>
+                            <p style="color: var(--text-light); margin-bottom: 1rem;">
+                                Carga múltiples clientes desde un archivo CSV
+                            </p>
+                            <input type="file" id="clientsCSV" class="file-input" accept=".csv" onchange="importCSV('clients')">
+                            <label for="clientsCSV" class="file-label">
+                                <i class="fas fa-file-upload"></i>
+                                Seleccionar archivo CSV
+                            </label>
+                            <div class="csv-template">
+                                <strong>Formato requerido:</strong>
+                                <div class="csv-example">Nombre,Email,Telefono<br>Juan Pérez,juan@email.com,11-1234-5678<br>María González,maria@email.com,11-2345-6789</div>
+                            </div>
+                        </div>
+
+                        <div class="import-section">
+                            <div class="import-title">
+                                <i class="fas fa-file-csv"></i>
+                                Importar Lotes
+                            </div>
+                            <p style="color: var(--text-light); margin-bottom: 1rem;">
+                                Carga múltiples lotes desde un archivo CSV
+                            </p>
+                            <input type="file" id="lotesCSV" class="file-input" accept=".csv" onchange="importCSV('lotes')">
+                            <label for="lotesCSV" class="file-label">
+                                <i class="fas fa-file-upload"></i>
+                                Seleccionar archivo CSV
+                            </label>
+                            <div class="csv-template">
+                                <strong>Formato requerido:</strong>
+                                <div class="csv-example">Cliente,Campo,Lote,Superficie,Cultivo,Variedad<br>Juan Pérez,Campo Norte,Lote 3,25,Soja,DM4670<br>Juan Pérez,Campo Sur,Lote 1A,40,Maíz,DK670</div>
+                            </div>
+                        </div>
+
+                        <div class="import-section">
+                            <div class="import-title">
+                                <i class="fas fa-file-csv"></i>
+                                Importar Productos
+                            </div>
+                            <p style="color: var(--text-light); margin-bottom: 1rem;">
+                                Carga múltiples productos desde un archivo CSV
+                            </p>
+                            <input type="file" id="productsCSV" class="file-input" accept=".csv" onchange="importCSV('products')">
+                            <label for="productsCSV" class="file-label">
+                                <i class="fas fa-file-upload"></i>
+                                Seleccionar archivo CSV
+                            </label>
+                            <div class="csv-template">
+                                <strong>Formato requerido:</strong>
+                                <div class="csv-example">Nombre,PrincipioActivo,Categoria,DosisMin,DosisMax,Unidad<br>Glifosato 48%,Glifosato,herbicida,2,4,L/ha<br>Atrazina 90%,Atrazina,herbicida,2,3,L/ha</div>
+                            </div>
+                        </div>
+
+                        <div class="import-section">
+                            <div class="import-title">
+                                <i class="fas fa-file-csv"></i>
+                                Importar Usuarios
+                            </div>
+                            <p style="color: var(--text-light); margin-bottom: 1rem;">
+                                Carga múltiples usuarios desde un archivo CSV
+                            </p>
+                            <input type="file" id="usersCSV" class="file-input" accept=".csv" onchange="importCSV('users')">
+                            <label for="usersCSV" class="file-label">
+                                <i class="fas fa-file-upload"></i>
+                                Seleccionar archivo CSV
+                            </label>
+                            <div class="csv-template">
+                                <strong>Formato requerido:</strong>
+                                <div class="csv-example">Email,Password,Nombre,Rol,Cliente<br>admin@agro.com,admin123,Administrador,admin,<br>juan@email.com,juan123,Juan Pérez,client,Juan Pérez</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Clients Section -->
+                <div id="clients" class="section">
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-users"></i>
+                                Gestión de Clientes
+                            </h2>
+                            <div class="card-actions">
+                                <button class="btn btn-secondary btn-small" onclick="showClientForm()">
+                                    <i class="fas fa-plus"></i>
+                                    Nuevo Cliente
+                                </button>
+                                <button class="btn btn-small" onclick="exportData('clients')">
+                                    <i class="fas fa-download"></i>
+                                    Exportar CSV
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="clientForm" class="hidden">
+                            <h3>Agregar Nuevo Cliente</h3>
+                            <form class="form-grid" onsubmit="addClient(event)">
+                                <div class="form-group">
+                                    <label for="clientName">Nombre</label>
+                                    <input type="text" id="clientName" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="clientEmail">Email</label>
+                                    <input type="email" id="clientEmail" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="clientPhone">Teléfono</label>
+                                    <input type="tel" id="clientPhone">
+                                </div>
+                                <div class="form-group">
+                                    <button type="submit" class="btn">
+                                        Guardar Cliente
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div id="clientsList">
+                            <p>Cargando clientes...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lotes Section -->
+                <div id="lotes" class="section">
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-map"></i>
+                                Gestión de Lotes
+                            </h2>
+                            <div class="card-actions">
+                                <button class="btn btn-secondary btn-small" onclick="showLoteForm()">
+                                    <i class="fas fa-plus"></i>
+                                    Nuevo Lote
+                                </button>
+                                <button class="btn btn-small" onclick="exportData('lotes')">
+                                    <i class="fas fa-download"></i>
+                                    Exportar CSV
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="loteForm" class="hidden">
+                            <h3>Agregar Nuevo Lote</h3>
+                            <form class="form-grid" onsubmit="addLote(event)">
+                                <div class="form-group">
+                                    <label for="loteClient">Cliente</label>
+                                    <select id="loteClient" required>
+                                        <option value="">Seleccionar cliente</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="loteCampo">Campo</label>
+                                    <input type="text" id="loteCampo" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="loteNombre">Nombre del Lote</label>
+                                    <input type="text" id="loteNombre" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="loteSuperficie">Superficie (ha)</label>
+                                    <input type="number" id="loteSuperficie" step="0.1" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="loteCultivo">Cultivo</label>
+                                    <input type="text" id="loteCultivo" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="loteVariedad">Variedad</label>
+                                    <input type="text" id="loteVariedad">
+                                </div>
+                                <div class="form-group">
+                                    <button type="submit" class="btn">
+                                        Guardar Lote
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div id="lotesList">
+                            <p>Cargando lotes...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Products Section -->
+                <div id="products" class="section">
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-flask"></i>
+                                Catálogo de Productos
+                            </h2>
+                            <div class="card-actions">
+                                <button class="btn btn-secondary btn-small" onclick="showProductForm()">
+                                    <i class="fas fa-plus"></i>
+                                    Nuevo Producto
+                                </button>
+                                <button class="btn btn-small" onclick="exportData('products')">
+                                    <i class="fas fa-download"></i>
+                                    Exportar CSV
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="productForm" class="hidden">
+                            <h3>Agregar Nuevo Producto</h3>
+                            <form class="form-grid" onsubmit="addProduct(event)">
+                                <div class="form-group">
+                                    <label for="productName">Nombre Comercial</label>
+                                    <input type="text" id="productName" required placeholder="ej: Glifosato 48%">
+                                </div>
+                                <div class="form-group">
+                                    <label for="productActive">Principio Activo</label>
+                                    <input type="text" id="productActive" placeholder="ej: Glifosato">
+                                </div>
+                                <div class="form-group">
+                                    <label for="productCategory">Categoría</label>
+                                    <select id="productCategory" required>
+                                        <option value="">Seleccionar categoría</option>
+                                        <option value="herbicida">Herbicida</option>
+                                        <option value="insecticida">Insecticida</option>
+                                        <option value="fungicida">Fungicida</option>
+                                        <option value="fertilizante">Fertilizante</option>
+                                        <option value="otros">Otros</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="productDosisMin">Dosis Mínima</label>
+                                    <input type="number" id="productDosisMin" step="0.01" placeholder="2">
+                                </div>
+                                <div class="form-group">
+                                    <label for="productDosisMax">Dosis Máxima</label>
+                                    <input type="number" id="productDosisMax" step="0.01" placeholder="4">
+                                </div>
+                                <div class="form-group">
+                                    <label for="productUnidad">Unidad</label>
+                                    <select id="productUnidad" required>
+                                        <option value="L/ha">L/ha</option>
+                                        <option value="kg/ha">kg/ha</option>
+                                        <option value="g/ha">g/ha</option>
+                                        <option value="ml/ha">ml/ha</option>
+                                        <option value="cc/ha">cc/ha</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <button type="submit" class="btn">
+                                        Guardar Producto
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div id="productsList">
+                            <p>Cargando productos...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recipes Section -->
+                <div id="recipes" class="section">
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-file-prescription"></i>
+                                Gestión de Recetas
+                            </h2>
+                            <button class="btn btn-secondary btn-small" onclick="showRecipeForm()">
+                                <i class="fas fa-plus"></i>
+                                Nueva Receta
+                            </button>
+                        </div>
+
+                        <div id="recipeForm" class="hidden">
+                            <h3>Crear Nueva Receta</h3>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="recipeClient">Cliente</label>
+                                    <select id="recipeClient" required onchange="loadClientLotes()">
+                                        <option value="">Seleccionar cliente</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="recipeLote">Lote</label>
+                                    <select id="recipeLote" required onchange="updateLoteInfo()">
+                                        <option value="">Seleccionar lote</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="recipeHectareas">Hectáreas a aplicar</label>
+                                    <input type="number" id="recipeHectareas" step="0.1" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="recipeObjetivo">Objetivo</label>
+                                    <select id="recipeObjetivo" required>
+                                        <option value="">Seleccionar objetivo</option>
+                                        <option value="barbecho">Barbecho</option>
+                                        <option value="pre-emergente">Pre-emergente</option>
+                                        <option value="post-emergente">Post-emergente</option>
+                                        <option value="insecticida">Insecticida</option>
+                                        <option value="fungicida">Fungicida</option>
+                                        <option value="fertilizacion">Fertilización</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="recipeObservaciones">Observaciones</label>
+                                <textarea id="recipeObservaciones" rows="3" placeholder="Observaciones adicionales..."></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <button type="button" class="btn" onclick="saveRecipe()">
+                                    Guardar Receta
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="recipesList">
+                            <p>Cargando recetas...</p>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let currentUser = null;
+        let isAdmin = false;
+        let clients = [];
+        let lotes = [];
+        let recipes = [];
+        let products = [];
+        let users = [];
+
+        // Datos de ejemplo básicos
+        const baseTestData = {
+            clients: [
+                { id: 1, name: "Cliente Ejemplo", email: "cliente@email.com", phone: "11-1234-5678", dateCreated: "2026-05-02" }
+            ],
+            lotes: [
+                { 
+                    id: 1, 
+                    clientId: 1, 
+                    campo: "Campo Ejemplo", 
+                    lote: "Lote 1", 
+                    superficie: 10, 
+                    cultivo: "Soja", 
+                    variedad: "DM4670"
+                }
+            ],
+            products: [
+                { id: 1, name: "Glifosato 48%", active: "Glifosato", category: "herbicida", dosisMin: 2, dosisMax: 4, unidad: "L/ha", dateCreated: "2026-05-02" }
+            ],
+            recipes: [],
+            users: [
+                { email: "admin@agro.com", password: "admin123", name: "Administrador", role: "admin", clientId: null },
+                { email: "marcosf009@gmail.com", password: "admin58737", name: "Marcos Ferreira", role: "admin", clientId: null }
+            ]
+        };
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+            loadSavedCredentials();
+            loadInitialData();
+        });
+
+        function setupEventListeners() {
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+        }
+
+        function loadInitialData() {
+            // Cargar datos guardados o datos de ejemplo
+            clients = JSON.parse(localStorage.getItem('agrorecetas_clients') || JSON.stringify(baseTestData.clients));
+            lotes = JSON.parse(localStorage.getItem('agrorecetas_lotes') || JSON.stringify(baseTestData.lotes));
+            products = JSON.parse(localStorage.getItem('agrorecetas_products') || JSON.stringify(baseTestData.products));
+            recipes = JSON.parse(localStorage.getItem('agrorecetas_recipes') || JSON.stringify(baseTestData.recipes));
+            users = JSON.parse(localStorage.getItem('agrorecetas_users') || JSON.stringify(baseTestData.users));
+        }
+
+        function saveData() {
+            localStorage.setItem('agrorecetas_clients', JSON.stringify(clients));
+            localStorage.setItem('agrorecetas_lotes', JSON.stringify(lotes));
+            localStorage.setItem('agrorecetas_products', JSON.stringify(products));
+            localStorage.setItem('agrorecetas_recipes', JSON.stringify(recipes));
+            localStorage.setItem('agrorecetas_users', JSON.stringify(users));
+        }
+
+        function loadSavedCredentials() {
+            const savedCredentials = localStorage.getItem('agrorecetas_credentials');
+            if (savedCredentials) {
+                try {
+                    const credentials = JSON.parse(savedCredentials);
+                    document.getElementById('email').value = credentials.email || '';
+                    document.getElementById('password').value = credentials.password || '';
+                    document.getElementById('rememberMe').checked = true;
+                } catch (error) {
+                    console.log('Error cargando credenciales guardadas:', error);
+                    localStorage.removeItem('agrorecetas_credentials');
+                }
+            }
+        }
+
+        function saveCredentials(email, password, remember) {
+            if (remember) {
+                localStorage.setItem('agrorecetas_credentials', JSON.stringify({
+                    email: email,
+                    password: password
+                }));
+            } else {
+                localStorage.removeItem('agrorecetas_credentials');
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const remember = document.getElementById('rememberMe').checked;
+
+            // Validar credenciales
+            const user = users.find(u => u.email === email && u.password === password);
+            
+            if (user) {
+                currentUser = user;
+                isAdmin = user.role === 'admin';
+                
+                saveCredentials(email, password, remember);
+                
+                document.getElementById('currentUser').textContent = user.name;
+                showApp();
+                loadDashboardData();
+                loadAllSections();
+            } else {
+                showMessage('loginMessage', 'Credenciales incorrectas. Intenta de nuevo.', 'error');
+            }
+        }
+
+        function showApp() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('appContent').classList.remove('hidden');
+        }
+
+        function logout() {
+            currentUser = null;
+            isAdmin = false;
+            document.getElementById('loginForm').reset();
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('appContent').classList.add('hidden');
+        }
+
+        // Función para importar CSV mejorada
+        function importCSV(type) {
+            const fileInput = document.getElementById(type + 'CSV');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showMessage('mainMessage', 'Por favor selecciona un archivo', 'error');
+                return;
+            }
+
+            console.log('Archivo seleccionado:', file.name, 'Tipo:', file.type, 'Tamaño:', file.size);
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const csv = e.target.result;
+                    console.log('Contenido CSV:', csv);
+                    
+                    const lines = csv.split('\n').filter(line => line.trim() !== '');
+                    console.log('Líneas procesadas:', lines);
+                    
+                    if (lines.length < 2) {
+                        showMessage('mainMessage', 'El archivo debe tener al menos una línea de datos', 'error');
+                        return;
+                    }
+
+                    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+                    console.log('Headers encontrados:', headers);
+                    
+                    let imported = 0;
+                    let errors = 0;
+                    const errorMessages = [];
+
+                    for (let i = 1; i < lines.length; i++) {
+                        if (lines[i].trim() === '') continue;
+                        
+                        const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
+                        console.log(`Procesando línea ${i}:`, values);
+                        
+                        try {
+                            if (type === 'clients') {
+                                importClient(headers, values);
+                            } else if (type === 'lotes') {
+                                importLote(headers, values);
+                            } else if (type === 'products') {
+                                importProduct(headers, values);
+                            } else if (type === 'users') {
+                                importUser(headers, values);
+                            }
+                            imported++;
+                        } catch (error) {
+                            console.error(`Error en línea ${i}:`, error);
+                            errors++;
+                            errorMessages.push(`Línea ${i}: ${error.message}`);
+                        }
+                    }
+
+                    saveData();
+                    loadAllSections();
+                    
+                    let message = `Importación completada: ${imported} registros importados`;
+                    if (errors > 0) {
+                        message += `, ${errors} errores`;
+                        console.log('Errores detallados:', errorMessages);
+                    }
+                    
+                    showMessage('mainMessage', message, errors > 0 ? 'warning' : 'success');
+                    
+                    // Limpiar input
+                    fileInput.value = '';
+                    
+                } catch (error) {
+                    console.error('Error procesando archivo:', error);
+                    showMessage('mainMessage', 'Error procesando el archivo: ' + error.message, 'error');
+                }
+            };
+            
+            reader.onerror = function() {
+                console.error('Error leyendo archivo');
+                showMessage('mainMessage', 'Error leyendo el archivo', 'error');
+            };
+            
+            reader.readAsText(file, 'UTF-8');
+        }
+
+        function importClient(headers, values) {
+            console.log('Importando cliente - Headers:', headers, 'Values:', values);
+            
+            // Buscar columnas con múltiples variaciones
+            const nameIndex = headers.findIndex(h => 
+                h.toLowerCase().includes('nombre') || 
+                h.toLowerCase().includes('name')
+            );
+            
+            const emailIndex = headers.findIndex(h => 
+                h.toLowerCase().includes('email') || 
+                h.toLowerCase().includes('correo')
+            );
+            
+            const phoneIndex = headers.findIndex(h => 
+                h.toLowerCase().includes('telefono') || 
+                h.toLowerCase().includes('teléfono') ||
+                h.toLowerCase().includes('phone') ||
+                h.toLowerCase().includes('celular')
+            );
+            
+            console.log('Índices encontrados:', { nameIndex, emailIndex, phoneIndex });
+            
+            if (nameIndex === -1) {
+                throw new Error('No se encontró columna de Nombre (debe contener "nombre" o "name")');
+            }
+            
+            if (emailIndex === -1) {
+                throw new Error('No se encontró columna de Email (debe contener "email" o "correo")');
+            }
+            
+            const newClient = {
+                id: Math.max(...clients.map(c => c.id), 0) + 1,
+                name: values[nameIndex] || '',
+                email: values[emailIndex] || '',
+                phone: phoneIndex >= 0 ? (values[phoneIndex] || '') : '',
+                dateCreated: new Date().toISOString().split('T')[0]
+            };
+            
+            // Verificar datos mínimos
+            if (!newClient.name || !newClient.email) {
+                throw new Error('Nombre y email son obligatorios');
+            }
+            
+            // Verificar que no exista ya
+            if (clients.find(c => c.email === newClient.email)) {
+                throw new Error(`El email ${newClient.email} ya existe`);
+            }
+            
+            console.log('Cliente a agregar:', newClient);
+            clients.push(newClient);
+        }
+
+        function importLote(headers, values) {
+            const clientIndex = headers.indexOf('Cliente');
+            const campoIndex = headers.indexOf('Campo');
+            const loteIndex = headers.indexOf('Lote');
+            const superficieIndex = headers.indexOf('Superficie');
+            const cultivoIndex = headers.indexOf('Cultivo');
+            const variedadIndex = headers.indexOf('Variedad');
+            
+            if (clientIndex === -1 || campoIndex === -1 || loteIndex === -1) {
+                throw new Error('Faltan columnas requeridas');
+            }
+            
+            // Buscar cliente
+            const clientName = values[clientIndex];
+            const client = clients.find(c => c.name === clientName);
+            
+            if (!client) {
+                throw new Error(`Cliente no encontrado: ${clientName}`);
+            }
+            
+            const newLote = {
+                id: Math.max(...lotes.map(l => l.id), 0) + 1,
+                clientId: client.id,
+                campo: values[campoIndex],
+                lote: values[loteIndex],
+                superficie: parseFloat(values[superficieIndex]) || 0,
+                cultivo: cultivoIndex >= 0 ? values[cultivoIndex] : '',
+                variedad: variedadIndex >= 0 ? values[variedadIndex] : '',
+                coordinates: []
+            };
+            
+            lotes.push(newLote);
+        }
+
+        function importProduct(headers, values) {
+            const nameIndex = headers.indexOf('Nombre');
+            const activeIndex = headers.indexOf('PrincipioActivo');
+            const categoryIndex = headers.indexOf('Categoria');
+            const minIndex = headers.indexOf('DosisMin');
+            const maxIndex = headers.indexOf('DosisMax');
+            const unitIndex = headers.indexOf('Unidad');
+            
+            if (nameIndex === -1) {
+                throw new Error('Falta columna Nombre');
+            }
+            
+            const newProduct = {
+                id: Math.max(...products.map(p => p.id), 0) + 1,
+                name: values[nameIndex],
+                active: activeIndex >= 0 ? values[activeIndex] : '',
+                category: categoryIndex >= 0 ? values[categoryIndex] : 'otros',
+                dosisMin: minIndex >= 0 ? parseFloat(values[minIndex]) || 0 : 0,
+                dosisMax: maxIndex >= 0 ? parseFloat(values[maxIndex]) || 0 : 0,
+                unidad: unitIndex >= 0 ? values[unitIndex] : 'L/ha',
+                dateCreated: new Date().toISOString().split('T')[0]
+            };
+            
+            // Verificar que no exista ya
+            if (!products.find(p => p.name === newProduct.name)) {
+                products.push(newProduct);
+            }
+        }
+
+        function importUser(headers, values) {
+            const emailIndex = headers.indexOf('Email');
+            const passwordIndex = headers.indexOf('Password');
+            const nameIndex = headers.indexOf('Nombre');
+            const roleIndex = headers.indexOf('Rol');
+            const clientIndex = headers.indexOf('Cliente');
+            
+            if (emailIndex === -1 || passwordIndex === -1 || nameIndex === -1) {
+                throw new Error('Faltan columnas requeridas');
+            }
+            
+            let clientId = null;
+            if (clientIndex >= 0 && values[clientIndex]) {
+                const client = clients.find(c => c.name === values[clientIndex]);
+                if (client) clientId = client.id;
+            }
+            
+            const newUser = {
+                email: values[emailIndex],
+                password: values[passwordIndex],
+                name: values[nameIndex],
+                role: roleIndex >= 0 ? values[roleIndex] : 'client',
+                clientId: clientId
+            };
+            
+            // Verificar que no exista ya
+            if (!users.find(u => u.email === newUser.email)) {
+                users.push(newUser);
+            }
+        }
+
+        // Función para exportar datos
+        function exportData(type) {
+            let data = [];
+            let headers = [];
+            let filename = '';
+            
+            if (type === 'clients') {
+                data = clients;
+                headers = ['ID', 'Nombre', 'Email', 'Telefono', 'Fecha'];
+                filename = 'clientes.csv';
+            } else if (type === 'lotes') {
+                data = lotes.map(l => ({
+                    ID: l.id,
+                    Cliente: clients.find(c => c.id === l.clientId)?.name || 'Desconocido',
+                    Campo: l.campo,
+                    Lote: l.lote,
+                    Superficie: l.superficie,
+                    Cultivo: l.cultivo,
+                    Variedad: l.variedad
+                }));
+                headers = ['ID', 'Cliente', 'Campo', 'Lote', 'Superficie', 'Cultivo', 'Variedad'];
+                filename = 'lotes.csv';
+            } else if (type === 'products') {
+                data = products.map(p => ({
+                    ID: p.id,
+                    Nombre: p.name,
+                    PrincipioActivo: p.active,
+                    Categoria: p.category,
+                    DosisMin: p.dosisMin,
+                    DosisMax: p.dosisMax,
+                    Unidad: p.unidad
+                }));
+                headers = ['ID', 'Nombre', 'PrincipioActivo', 'Categoria', 'DosisMin', 'DosisMax', 'Unidad'];
+                filename = 'productos.csv';
+            }
+            
+            if (data.length === 0) {
+                showMessage('mainMessage', 'No hay datos para exportar', 'info');
+                return;
+            }
+            
+            let csv = headers.join(',') + '\n';
+            data.forEach(row => {
+                const values = headers.map(header => {
+                    let value = row[header] || '';
+                    // Escapar comillas y comas
+                    if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
+                        value = '"' + value.replace(/"/g, '""') + '"';
+                    }
+                    return value;
+                });
+                csv += values.join(',') + '\n';
+            });
+            
+            // Descargar archivo
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+            
+            showMessage('mainMessage', `Datos exportados como ${filename}`, 'success');
+        }
+
+        // Funciones de secciones
+        function showSection(sectionName, button) {
+            // Ocultar todas las secciones
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Mostrar la sección seleccionada
+            document.getElementById(sectionName).classList.add('active');
+            
+            // Actualizar botones de navegación
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            button.classList.add('active');
+            
+            // Cargar datos de la sección
+            if (sectionName === 'clients') loadClientsSection();
+            else if (sectionName === 'lotes') loadLotesSection();
+            else if (sectionName === 'products') loadProductsSection();
+            else if (sectionName === 'recipes') loadRecipesSection();
+        }
+
+        function loadAllSections() {
+            loadClientsSection();
+            loadLotesSection(); 
+            loadProductsSection();
+            loadRecipesSection();
+        }
+
+        function loadDashboardData() {
+            // Estadísticas básicas
+            const totalClients = clients.length;
+            const totalLotes = lotes.length;
+            const totalProducts = products.length;
+            const totalRecipes = recipes.length;
+            
+            document.getElementById('stat1Value').textContent = totalRecipes;
+            document.getElementById('stat2Value').textContent = totalClients;
+            document.getElementById('stat3Value').textContent = totalLotes;
+            document.getElementById('stat4Value').textContent = totalProducts;
+            
+            // Actualizar títulos
+            document.getElementById('stat1Title').textContent = 'Total Recetas';
+            document.getElementById('stat2Title').textContent = 'Total Clientes';
+            document.getElementById('stat3Title').textContent = 'Total Lotes';
+            document.getElementById('stat4Title').textContent = 'Total Productos';
+            
+            // Dashboard content
+            document.getElementById('dashboardContent').innerHTML = `
+                <div style="text-align: center; padding: 2rem;">
+                    <h3>¡Bienvenido a TWIN AgroRecetas!</h3>
+                    <p>Sistema completo de gestión de recetas de pulverización</p>
+                    <div style="margin: 2rem 0;">
+                        <p><strong>💡 Sugerencia:</strong> Para empezar, importa tus datos usando la sección "Importar Datos"</p>
+                        <p>O agrega datos manualmente en cada sección</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function loadClientsSection() {
+            const container = document.getElementById('clientsList');
+            
+            if (clients.length === 0) {
+                container.innerHTML = '<p>No hay clientes. Agrega algunos usando el botón "Nuevo Cliente" o importa desde CSV.</p>';
+                return;
+            }
+            
+            const table = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Teléfono</th>
+                            <th>Fecha Creación</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${clients.map(client => `
+                            <tr>
+                                <td>${client.id}</td>
+                                <td>${client.name}</td>
+                                <td>${client.email}</td>
+                                <td>${client.phone}</td>
+                                <td>${client.dateCreated}</td>
+                                <td>
+                                    <button class="delete-btn" onclick="deleteClient(${client.id})">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            container.innerHTML = table;
+            
+            // Actualizar dropdown de clientes en lotes
+            updateClientDropdowns();
+        }
+
+        function loadLotesSection() {
+            const container = document.getElementById('lotesList');
+            
+            if (lotes.length === 0) {
+                container.innerHTML = '<p>No hay lotes. Agrega algunos usando el botón "Nuevo Lote" o importa desde CSV.</p>';
+                return;
+            }
+            
+            const table = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Cliente</th>
+                            <th>Campo</th>
+                            <th>Lote</th>
+                            <th>Superficie (ha)</th>
+                            <th>Cultivo</th>
+                            <th>Variedad</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${lotes.map(lote => {
+                            const client = clients.find(c => c.id === lote.clientId);
+                            return `
+                                <tr>
+                                    <td>${lote.id}</td>
+                                    <td>${client ? client.name : 'Desconocido'}</td>
+                                    <td>${lote.campo}</td>
+                                    <td>${lote.lote}</td>
+                                    <td>${lote.superficie}</td>
+                                    <td>${lote.cultivo}</td>
+                                    <td>${lote.variedad}</td>
+                                    <td>
+                                        <button class="delete-btn" onclick="deleteLote(${lote.id})">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            container.innerHTML = table;
+        }
+
+        function loadProductsSection() {
+            const container = document.getElementById('productsList');
+            
+            if (products.length === 0) {
+                container.innerHTML = '<p>No hay productos. Agrega algunos usando el botón "Nuevo Producto" o importa desde CSV.</p>';
+                return;
+            }
+            
+            const table = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Principio Activo</th>
+                            <th>Categoría</th>
+                            <th>Dosis Min</th>
+                            <th>Dosis Max</th>
+                            <th>Unidad</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${products.map(product => `
+                            <tr>
+                                <td>${product.id}</td>
+                                <td>${product.name}</td>
+                                <td>${product.active}</td>
+                                <td>${product.category}</td>
+                                <td>${product.dosisMin}</td>
+                                <td>${product.dosisMax}</td>
+                                <td>${product.unidad}</td>
+                                <td>
+                                    <button class="delete-btn" onclick="deleteProduct(${product.id})">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            container.innerHTML = table;
+        }
+
+        function loadRecipesSection() {
+            const container = document.getElementById('recipesList');
+            
+            if (recipes.length === 0) {
+                container.innerHTML = '<p>No hay recetas creadas.</p>';
+                return;
+            }
+            
+            // Mostrar recetas existentes (implementar según necesidad)
+            container.innerHTML = '<p>Funcionalidad de recetas en desarrollo...</p>';
+        }
+
+        // Funciones de formularios
+        function showClientForm() {
+            const form = document.getElementById('clientForm');
+            form.classList.toggle('hidden');
+        }
+
+        function addClient(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('clientName').value.trim();
+            const email = document.getElementById('clientEmail').value.trim();
+            const phone = document.getElementById('clientPhone').value.trim();
+            
+            const newClient = {
+                id: Math.max(...clients.map(c => c.id), 0) + 1,
+                name: name,
+                email: email,
+                phone: phone,
+                dateCreated: new Date().toISOString().split('T')[0]
+            };
+            
+            clients.push(newClient);
+            saveData();
+            loadClientsSection();
+            
+            // Limpiar formulario
+            document.getElementById('clientName').value = '';
+            document.getElementById('clientEmail').value = '';
+            document.getElementById('clientPhone').value = '';
+            
+            showMessage('mainMessage', 'Cliente agregado exitosamente', 'success');
+            document.getElementById('clientForm').classList.add('hidden');
+        }
+
+        function showLoteForm() {
+            const form = document.getElementById('loteForm');
+            form.classList.toggle('hidden');
+            updateClientDropdowns();
+        }
+
+        function addLote(e) {
+            e.preventDefault();
+            
+            const clientId = parseInt(document.getElementById('loteClient').value);
+            const campo = document.getElementById('loteCampo').value.trim();
+            const nombre = document.getElementById('loteNombre').value.trim();
+            const superficie = parseFloat(document.getElementById('loteSuperficie').value);
+            const cultivo = document.getElementById('loteCultivo').value.trim();
+            const variedad = document.getElementById('loteVariedad').value.trim();
+            
+            const newLote = {
+                id: Math.max(...lotes.map(l => l.id), 0) + 1,
+                clientId: clientId,
+                campo: campo,
+                lote: nombre,
+                superficie: superficie,
+                cultivo: cultivo,
+                variedad: variedad,
+                coordinates: []
+            };
+            
+            lotes.push(newLote);
+            saveData();
+            loadLotesSection();
+            
+            // Limpiar formulario
+            document.getElementById('loteClient').value = '';
+            document.getElementById('loteCampo').value = '';
+            document.getElementById('loteNombre').value = '';
+            document.getElementById('loteSuperficie').value = '';
+            document.getElementById('loteCultivo').value = '';
+            document.getElementById('loteVariedad').value = '';
+            
+            showMessage('mainMessage', 'Lote agregado exitosamente', 'success');
+            document.getElementById('loteForm').classList.add('hidden');
+        }
+
+        function showProductForm() {
+            const form = document.getElementById('productForm');
+            form.classList.toggle('hidden');
+        }
+
+        function addProduct(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('productName').value.trim();
+            const active = document.getElementById('productActive').value.trim();
+            const category = document.getElementById('productCategory').value;
+            const dosisMin = parseFloat(document.getElementById('productDosisMin').value) || 0;
+            const dosisMax = parseFloat(document.getElementById('productDosisMax').value) || 0;
+            const unidad = document.getElementById('productUnidad').value;
+            
+            const newProduct = {
+                id: Math.max(...products.map(p => p.id), 0) + 1,
+                name: name,
+                active: active,
+                category: category,
+                dosisMin: dosisMin,
+                dosisMax: dosisMax,
+                unidad: unidad,
+                dateCreated: new Date().toISOString().split('T')[0]
+            };
+            
+            products.push(newProduct);
+            saveData();
+            loadProductsSection();
+            
+            // Limpiar formulario
+            document.getElementById('productName').value = '';
+            document.getElementById('productActive').value = '';
+            document.getElementById('productCategory').value = '';
+            document.getElementById('productDosisMin').value = '';
+            document.getElementById('productDosisMax').value = '';
+            document.getElementById('productUnidad').value = 'L/ha';
+            
+            showMessage('mainMessage', 'Producto agregado exitosamente', 'success');
+            document.getElementById('productForm').classList.add('hidden');
+        }
+
+        function showRecipeForm() {
+            const form = document.getElementById('recipeForm');
+            form.classList.toggle('hidden');
+            updateClientDropdowns();
+        }
+
+        function loadClientLotes() {
+            const clientId = parseInt(document.getElementById('recipeClient').value);
+            const loteSelect = document.getElementById('recipeLote');
+            
+            loteSelect.innerHTML = '<option value="">Seleccionar lote</option>';
+            
+            if (clientId) {
+                const clientLotes = lotes.filter(l => l.clientId === clientId);
+                clientLotes.forEach(lote => {
+                    const option = document.createElement('option');
+                    option.value = lote.id;
+                    option.textContent = `${lote.campo} - ${lote.lote}`;
+                    loteSelect.appendChild(option);
+                });
+            }
+        }
+
+        function updateLoteInfo() {
+            const loteId = parseInt(document.getElementById('recipeLote').value);
+            const hectareasInput = document.getElementById('recipeHectareas');
+            
+            if (loteId) {
+                const lote = lotes.find(l => l.id === loteId);
+                if (lote) {
+                    hectareasInput.value = lote.superficie;
+                }
+            }
+        }
+
+        function saveRecipe() {
+            const clientId = parseInt(document.getElementById('recipeClient').value);
+            const loteId = parseInt(document.getElementById('recipeLote').value);
+            const hectareas = parseFloat(document.getElementById('recipeHectareas').value);
+            const objetivo = document.getElementById('recipeObjetivo').value;
+            const observaciones = document.getElementById('recipeObservaciones').value.trim();
+            
+            if (!clientId || !loteId || !hectareas || !objetivo) {
+                showMessage('mainMessage', 'Por favor completa todos los campos requeridos', 'error');
+                return;
+            }
+            
+            const client = clients.find(c => c.id === clientId);
+            const lote = lotes.find(l => l.id === loteId);
+            
+            const newRecipe = {
+                id: Math.max(...recipes.map(r => r.id), 0) + 1,
+                clientId: clientId,
+                clientName: client.name,
+                loteId: loteId,
+                campo: lote.campo,
+                lote: lote.lote,
+                cultivo: lote.cultivo,
+                variedad: lote.variedad,
+                hectareas: hectareas,
+                objetivo: objetivo,
+                observaciones: observaciones,
+                products: [],
+                status: 'pendiente',
+                dateCreated: new Date().toISOString().split('T')[0]
+            };
+            
+            recipes.push(newRecipe);
+            saveData();
+            loadRecipesSection();
+            
+            // Limpiar formulario
+            document.getElementById('recipeClient').value = '';
+            document.getElementById('recipeLote').value = '';
+            document.getElementById('recipeHectareas').value = '';
+            document.getElementById('recipeObjetivo').value = '';
+            document.getElementById('recipeObservaciones').value = '';
+            
+            showMessage('mainMessage', 'Receta creada exitosamente', 'success');
+            document.getElementById('recipeForm').classList.add('hidden');
+        }
+
+        // Funciones de utilidad
+        function updateClientDropdowns() {
+            const dropdowns = ['loteClient', 'recipeClient'];
+            
+            dropdowns.forEach(dropdownId => {
+                const dropdown = document.getElementById(dropdownId);
+                if (dropdown) {
+                    const currentValue = dropdown.value;
+                    dropdown.innerHTML = '<option value="">Seleccionar cliente</option>';
+                    
+                    clients.forEach(client => {
+                        const option = document.createElement('option');
+                        option.value = client.id;
+                        option.textContent = client.name;
+                        if (client.id == currentValue) option.selected = true;
+                        dropdown.appendChild(option);
+                    });
+                }
+            });
+        }
+
+        function deleteClient(id) {
+            if (confirm('¿Estás seguro de eliminar este cliente?')) {
+                clients = clients.filter(c => c.id !== id);
+                saveData();
+                loadClientsSection();
+                showMessage('mainMessage', 'Cliente eliminado', 'info');
+            }
+        }
+
+        function deleteLote(id) {
+            if (confirm('¿Estás seguro de eliminar este lote?')) {
+                lotes = lotes.filter(l => l.id !== id);
+                saveData();
+                loadLotesSection();
+                showMessage('mainMessage', 'Lote eliminado', 'info');
+            }
+        }
+
+        function deleteProduct(id) {
+            if (confirm('¿Estás seguro de eliminar este producto?')) {
+                products = products.filter(p => p.id !== id);
+                saveData();
+                loadProductsSection();
+                showMessage('mainMessage', 'Producto eliminado', 'info');
+            }
+        }
+
+        function showMessage(containerId, text, type) {
+            const container = document.getElementById(containerId);
+            const iconMap = {
+                success: 'fas fa-check-circle',
+                error: 'fas fa-exclamation-circle',
+                info: 'fas fa-info-circle',
+                warning: 'fas fa-exclamation-triangle'
+            };
+
+            container.innerHTML = `
+                <div class="message message-${type}">
+                    <i class="${iconMap[type]}"></i>
+                    <span>${text}</span>
+                </div>
+            `;
+
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
