@@ -2405,17 +2405,30 @@ let gapi, isInitialized = false, isSignedIn = false;
 
 async function initializeGoogleSheets() {
     try {
-        console.log('🔍 Iniciando conexión con Google Sheets...');
+        console.log('🔍 Cargando Google API...');
         
-        // Evitar conflictos - usar setTimeout
+        // Cargar gapi si no existe
+        if (typeof gapi === 'undefined') {
+            await new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://apis.google.com/js/api.js';
+                script.onload = () => {
+                    console.log('📦 Google API cargada');
+                    resolve();
+                };
+                script.onerror = () => reject('Error cargando Google API');
+                document.head.appendChild(script);
+            });
+        }
+        
+        // Esperar un poco más e intentar conexión
         setTimeout(async () => {
             try {
-                if (typeof gapi === 'undefined') {
-                    console.log('⚠️ GAPI no disponible, usando modo local');
-                    return;
-                }
+                console.log('🔗 Iniciando conexión...');
                 
                 await gapi.load('client:auth2', async () => {
+                    console.log('🔑 Inicializando con credenciales...');
+                    
                     await gapi.client.init({
                         apiKey: GOOGLE_CONFIG.apiKey,
                         clientId: GOOGLE_CONFIG.clientId,
@@ -2425,17 +2438,18 @@ async function initializeGoogleSheets() {
                     
                     isInitialized = true;
                     isSignedIn = gapi.auth2.getAuthInstance().isSignedIn.get();
-                    console.log('🎉 Google Sheets conectado!');
+                    console.log('🎉 ¡Google Sheets conectado exitosamente!');
                     updateSyncStatus();
                 });
                 
             } catch (error) {
-                console.log('⚠️ Usando modo local:', error.message);
+                console.log('⚠️ Error en conexión:', error);
+                showMessage('mainMessage', 'Modo local activo - usa Export/Import para sincronizar', 'info');
             }
-        }, 2000);
+        }, 3000);
         
     } catch (error) {
-        console.log('⚠️ Continuando en modo local');
+        console.log('⚠️ Error cargando API:', error);
     }
 }
 
