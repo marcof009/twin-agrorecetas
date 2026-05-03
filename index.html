@@ -1587,35 +1587,101 @@ const lines = cleanedCSV.split('\n').filter(line => line.trim() !== '');
         }
 
         function loadDashboardData() {
-            // Estadísticas básicas
-            const totalClients = clients.length;
-            const totalLotes = lotes.length;
-            const totalProducts = products.length;
-            const totalRecipes = recipes.length;
-            
-            document.getElementById('stat1Value').textContent = totalRecipes;
-            document.getElementById('stat2Value').textContent = totalClients;
-            document.getElementById('stat3Value').textContent = totalLotes;
-            document.getElementById('stat4Value').textContent = totalProducts;
-            
-            // Actualizar títulos
-            document.getElementById('stat1Title').textContent = 'Total Recetas';
-            document.getElementById('stat2Title').textContent = 'Total Clientes';
-            document.getElementById('stat3Title').textContent = 'Total Lotes';
-            document.getElementById('stat4Title').textContent = 'Total Productos';
-            
-            // Dashboard content
-            document.getElementById('dashboardContent').innerHTML = `
-                <div style="text-align: center; padding: 2rem;">
-                    <h3>¡Bienvenido a TWIN AgroRecetas!</h3>
-                    <p>Sistema completo de gestión de recetas de pulverización</p>
-                    <div style="margin: 2rem 0;">
-                        <p><strong>💡 Sugerencia:</strong> Para empezar, importa tus datos usando la sección "Importar Datos"</p>
-                        <p>O agrega datos manualmente en cada sección</p>
+    // Estadísticas básicas
+    const totalClients = clients.length;
+    const totalLotes = lotes.length;
+    const totalProducts = products.length;
+    const totalRecipes = recipes.length;
+    
+    document.getElementById('stat1Value').textContent = totalRecipes;
+    document.getElementById('stat2Value').textContent = totalClients;
+    document.getElementById('stat3Value').textContent = totalLotes;
+    document.getElementById('stat4Value').textContent = totalProducts;
+    
+    // Actualizar títulos
+    document.getElementById('stat1Title').textContent = 'Total Recetas';
+    document.getElementById('stat2Title').textContent = 'Total Clientes';
+    document.getElementById('stat3Title').textContent = 'Total Lotes';
+    document.getElementById('stat4Title').textContent = 'Total Productos';
+    
+    // Dashboard content con selector de cliente
+    document.getElementById('dashboardContent').innerHTML = `
+        <div class="form-group" style="max-width: 300px; margin-bottom: 2rem;">
+            <label for="dashboardClientFilter">Filtrar por Cliente</label>
+            <select id="dashboardClientFilter" onchange="filterRecipesByClient()">
+                <option value="">Todos los clientes</option>
+                ${clients.map(client => `
+                    <option value="${client.id}">${client.name}</option>
+                `).join('')}
+            </select>
+        </div>
+        <div id="clientRecipesContainer">
+            ${generateRecipesDashboard()}
+        </div>
+    `;
+}
+
+function generateRecipesDashboard(clientId = null) {
+    let filteredRecipes = recipes;
+    
+    if (clientId) {
+        filteredRecipes = recipes.filter(r => r.clientId === parseInt(clientId));
+    }
+    
+    if (filteredRecipes.length === 0) {
+        return '<p style="text-align: center; color: var(--text-light); padding: 2rem;">No hay recetas para mostrar</p>';
+    }
+    
+    const pendientes = filteredRecipes.filter(r => r.status === 'pendiente');
+    const aplicadas = filteredRecipes.filter(r => r.status === 'aplicado');
+    
+    return `
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+            <div class="content-card" style="border-left: 4px solid var(--warning);">
+                <h4 style="color: var(--warning); margin-bottom: 1rem;">
+                    <i class="fas fa-clock"></i> Pendientes (${pendientes.length})
+                </h4>
+                ${pendientes.slice(0, 5).map(recipe => `
+                    <div style="padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 0.5rem;">
+                        <div style="display: flex; justify-content: between; align-items: center;">
+                            <div>
+                                <strong>Receta ${recipe.recipeNumber}</strong> - ${recipe.clientName}<br>
+                                <small>${recipe.campo} - ${recipe.lote} (${recipe.hectareas} ha)</small><br>
+                                <span style="color: var(--warning); font-size: 0.8rem;">
+                                    <i class="fas fa-exclamation-circle"></i> ${recipe.urgencia || 'Sin urgencia'}
+                                </span>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            `;
-        }
+                `).join('')}
+                ${pendientes.length > 5 ? `<p style="text-align: center; color: var(--text-light);">... y ${pendientes.length - 5} más</p>` : ''}
+            </div>
+            
+            <div class="content-card" style="border-left: 4px solid var(--success);">
+                <h4 style="color: var(--success); margin-bottom: 1rem;">
+                    <i class="fas fa-check-circle"></i> Aplicadas (${aplicadas.length})
+                </h4>
+                ${aplicadas.slice(0, 5).map(recipe => `
+                    <div style="padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 0.5rem;">
+                        <div>
+                            <strong>Receta ${recipe.recipeNumber}</strong> - ${recipe.clientName}<br>
+                            <small>${recipe.campo} - ${recipe.lote} (${recipe.hectareas} ha)</small><br>
+                            <span style="color: var(--success); font-size: 0.8rem;">
+                                <i class="fas fa-check"></i> Aplicada
+                            </span>
+                        </div>
+                    </div>
+                `).join('')}
+                ${aplicadas.length > 5 ? `<p style="text-align: center; color: var(--text-light);">... y ${aplicadas.length - 5} más</p>` : ''}
+            </div>
+        </div>
+    `;
+}
+
+function filterRecipesByClient() {
+    const clientId = document.getElementById('dashboardClientFilter').value;
+    document.getElementById('clientRecipesContainer').innerHTML = generateRecipesDashboard(clientId);
+}
 
         function loadClientsSection() {
             const container = document.getElementById('clientsList');
@@ -1645,11 +1711,14 @@ const lines = cleanedCSV.split('\n').filter(line => line.trim() !== '');
                                 <td>${client.email}</td>
                                 <td>${client.phone}</td>
                                 <td>${client.dateCreated}</td>
-                                <td>
-                                    <button class="delete-btn" onclick="deleteClient(${client.id})">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </td>
+<td>
+    <button class="btn btn-small" onclick="editClient(${client.id})" style="margin-right: 0.5rem;">
+        <i class="fas fa-edit"></i>
+    </button>
+    <button class="delete-btn" onclick="deleteClient(${client.id})">
+        <i class="fas fa-trash"></i>
+    </button>
+</td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -1697,10 +1766,13 @@ const lines = cleanedCSV.split('\n').filter(line => line.trim() !== '');
                                     <td>${lote.cultivo}</td>
                                     <td>${lote.variedad}</td>
                                     <td>
-                                        <button class="delete-btn" onclick="deleteLote(${lote.id})">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </td>
+    <button class="btn btn-small" onclick="editLote(${lote.id})" style="margin-right: 0.5rem;">
+        <i class="fas fa-edit"></i>
+    </button>
+    <button class="delete-btn" onclick="deleteLote(${lote.id})">
+        <i class="fas fa-trash"></i>
+    </button>
+</td>
                                 </tr>
                             `;
                         }).join('')}
@@ -1744,10 +1816,13 @@ const lines = cleanedCSV.split('\n').filter(line => line.trim() !== '');
                                 <td>${product.dosisMax}</td>
                                 <td>${product.unidad}</td>
                                 <td>
-                                    <button class="delete-btn" onclick="deleteProduct(${product.id})">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </td>
+    <button class="btn btn-small" onclick="editProduct(${product.id})" style="margin-right: 0.5rem;">
+        <i class="fas fa-edit"></i>
+    </button>
+    <button class="delete-btn" onclick="deleteProduct(${product.id})">
+        <i class="fas fa-trash"></i>
+    </button>
+</td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -1938,7 +2013,13 @@ const lines = cleanedCSV.split('\n').filter(line => line.trim() !== '');
             const client = clients.find(c => c.id === clientId);
             const lote = lotes.find(l => l.id === loteId);
             
+            // Generar número de receta por cliente
+const clientRecipes = recipes.filter(r => r.clientId === clientId);
+const recipeNumber = (clientRecipes.length + 1).toString().padStart(4, '0');
+            
             const newRecipe = {
+                id: Math.max(...recipes.map(r => r.id), 0) + 1,
+recipeNumber: recipeNumber,
                 id: Math.max(...recipes.map(r => r.id), 0) + 1,
                 clientId: clientId,
                 clientName: client.name,
@@ -1999,7 +2080,59 @@ const lines = cleanedCSV.split('\n').filter(line => line.trim() !== '');
                 showMessage('mainMessage', 'Cliente eliminado', 'info');
             }
         }
+function editClient(id) {
+    const client = clients.find(c => c.id === id);
+    if (!client) return;
+    
+    // Llenar el formulario con los datos existentes
+    document.getElementById('clientName').value = client.name;
+    document.getElementById('clientEmail').value = client.email;
+    document.getElementById('clientPhone').value = client.phone;
+    
+    // Mostrar el formulario
+    document.getElementById('clientForm').classList.remove('hidden');
+    
+    // Cambiar el botón para modo edición
+    const form = document.querySelector('#clientForm form');
+    form.onsubmit = function(e) {
+        e.preventDefault();
+        updateClient(id);
+    };
+    
+    // Cambiar texto del botón
+    const submitBtn = document.querySelector('#clientForm button[type="submit"]');
+    submitBtn.innerHTML = '<i class="fas fa-save"></i> Actualizar Cliente';
+}
 
+function updateClient(id) {
+    const name = document.getElementById('clientName').value.trim();
+    const email = document.getElementById('clientEmail').value.trim();
+    const phone = document.getElementById('clientPhone').value.trim();
+    
+    // Encontrar y actualizar el cliente
+    const clientIndex = clients.findIndex(c => c.id === id);
+    if (clientIndex !== -1) {
+        clients[clientIndex].name = name;
+        clients[clientIndex].email = email;
+        clients[clientIndex].phone = phone;
+        
+        saveData();
+        loadClientsSection();
+        
+        // Limpiar formulario y restaurar modo "agregar"
+        document.getElementById('clientName').value = '';
+        document.getElementById('clientEmail').value = '';
+        document.getElementById('clientPhone').value = '';
+        document.getElementById('clientForm').classList.add('hidden');
+        
+        const form = document.querySelector('#clientForm form');
+        form.onsubmit = addClient;
+        const submitBtn = document.querySelector('#clientForm button[type="submit"]');
+        submitBtn.innerHTML = 'Guardar Cliente';
+        
+        showMessage('mainMessage', 'Cliente actualizado exitosamente', 'success');
+    }
+}
         function deleteLote(id) {
             if (confirm('¿Estás seguro de eliminar este lote?')) {
                 lotes = lotes.filter(l => l.id !== id);
@@ -2008,7 +2141,71 @@ const lines = cleanedCSV.split('\n').filter(line => line.trim() !== '');
                 showMessage('mainMessage', 'Lote eliminado', 'info');
             }
         }
+function editLote(id) {
+    const lote = lotes.find(l => l.id === id);
+    if (!lote) return;
+    
+    // Llenar el formulario con los datos existentes
+    document.getElementById('loteClient').value = lote.clientId;
+    document.getElementById('loteCampo').value = lote.campo;
+    document.getElementById('loteNombre').value = lote.lote;
+    document.getElementById('loteSuperficie').value = lote.superficie;
+    document.getElementById('loteCultivo').value = lote.cultivo;
+    document.getElementById('loteVariedad').value = lote.variedad;
+    
+    // Mostrar el formulario
+    document.getElementById('loteForm').classList.remove('hidden');
+    
+    // Cambiar el botón para modo edición
+    const form = document.querySelector('#loteForm form');
+    form.onsubmit = function(e) {
+        e.preventDefault();
+        updateLote(id);
+    };
+    
+    // Cambiar texto del botón
+    const submitBtn = document.querySelector('#loteForm button[type="submit"]');
+    submitBtn.innerHTML = '<i class="fas fa-save"></i> Actualizar Lote';
+}
 
+function updateLote(id) {
+    const clientId = parseInt(document.getElementById('loteClient').value);
+    const campo = document.getElementById('loteCampo').value.trim();
+    const nombre = document.getElementById('loteNombre').value.trim();
+    const superficie = parseFloat(document.getElementById('loteSuperficie').value);
+    const cultivo = document.getElementById('loteCultivo').value.trim();
+    const variedad = document.getElementById('loteVariedad').value.trim();
+    
+    // Encontrar y actualizar el lote
+    const loteIndex = lotes.findIndex(l => l.id === id);
+    if (loteIndex !== -1) {
+        lotes[loteIndex].clientId = clientId;
+        lotes[loteIndex].campo = campo;
+        lotes[loteIndex].lote = nombre;
+        lotes[loteIndex].superficie = superficie;
+        lotes[loteIndex].cultivo = cultivo;
+        lotes[loteIndex].variedad = variedad;
+        
+        saveData();
+        loadLotesSection();
+        
+        // Limpiar formulario y restaurar modo "agregar"
+        document.getElementById('loteClient').value = '';
+        document.getElementById('loteCampo').value = '';
+        document.getElementById('loteNombre').value = '';
+        document.getElementById('loteSuperficie').value = '';
+        document.getElementById('loteCultivo').value = '';
+        document.getElementById('loteVariedad').value = '';
+        document.getElementById('loteForm').classList.add('hidden');
+        
+        const form = document.querySelector('#loteForm form');
+        form.onsubmit = addLote;
+        const submitBtn = document.querySelector('#loteForm button[type="submit"]');
+        submitBtn.innerHTML = 'Guardar Lote';
+        
+        showMessage('mainMessage', 'Lote actualizado exitosamente', 'success');
+    }
+}
         function deleteProduct(id) {
             if (confirm('¿Estás seguro de eliminar este producto?')) {
                 products = products.filter(p => p.id !== id);
@@ -2017,7 +2214,59 @@ const lines = cleanedCSV.split('\n').filter(line => line.trim() !== '');
                 showMessage('mainMessage', 'Producto eliminado', 'info');
             }
         }
+function editProduct(id) {
+    const product = products.find(p => p.id === id);
+    if (!product) return;
+    
+    // Llenar el formulario con los datos existentes
+    document.getElementById('productName').value = product.name;
+    document.getElementById('productActive').value = product.active;
+    document.getElementById('productCategory').value = product.category;
+    document.getElementById('productDosisMin').value = product.dosisMin;
+    document.getElementById('productDosisMax').value = product.dosisMax;
+    document.getElementById('productUnidad').value = product.unidad;
+    
+    // Mostrar el formulario
+    document.getElementById('productForm').classList.remove('hidden');
+    
+    // Cambiar el botón para modo edición
+    const form = document.querySelector('#productForm form');
+    form.onsubmit = function(e) {
+        e.preventDefault();
+        updateProduct(id);
+    };
+    
+    // Cambiar texto del botón
+    const submitBtn = document.querySelector('#productForm button[type="submit"]');
+    submitBtn.innerHTML = '<i class="fas fa-save"></i> Actualizar Producto';
+}
 
+function updateProduct(id) {
+    const name = document.getElementById('productName').value.trim();
+    const active = document.getElementById('productActive').value.trim();
+    const category = document.getElementById('productCategory').value;
+    const dosisMin = parseFloat(document.getElementById('productDosisMin').value) || 0;
+    const dosisMax = parseFloat(document.getElementById('productDosisMax').value) || 0;
+    const unidad = document.getElementById('productUnidad').value;
+    
+    // Encontrar y actualizar el producto
+    const productIndex = products.findIndex(p => p.id === id);
+    if (productIndex !== -1) {
+        products[productIndex].name = name;
+        products[productIndex].active = active;
+        products[productIndex].category = category;
+        products[productIndex].dosisMin = dosisMin;
+        products[productIndex].dosisMax = dosisMax;
+        products[productIndex].unidad = unidad;
+        
+        saveData();
+        loadProductsSection();
+        
+        // Limpiar formulario y restaurar modo "agregar"
+        document.getElementById('productName').value = '';
+        document.getElementById('productActive').value = '';
+        document.getElementById('productCategory').value = '';
+        document.getE
         function showMessage(containerId, text, type) {
             const container = document.getElementById(containerId);
             const iconMap = {
