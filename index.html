@@ -6,7 +6,6 @@
     <title>TWIN AgroRecetas - Gestión de Pulverizaciones</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <script src="https://apis.google.com/js/api.js"></script>
     <script>
 // Configuración Google Sheets
 const GOOGLE_CONFIG = {
@@ -2406,15 +2405,18 @@ let gapi, isInitialized = false, isSignedIn = false;
 
 async function initializeGoogleSheets() {
     try {
-        // Esperar a que gapi esté disponible
-        await new Promise((resolve) => {
-            if (window.gapi && window.gapi.load) {
-                resolve();
-            } else {
-                setTimeout(resolve, 1000);
-            }
-        });
+        // Cargar Google API dinámicamente
+        if (!window.gapi) {
+            await new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://apis.google.com/js/api.js';
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
 
+        // Inicializar gapi
         await new Promise((resolve) => {
             window.gapi.load('client:auth2', resolve);
         });
@@ -2430,12 +2432,12 @@ async function initializeGoogleSheets() {
         const authInstance = window.gapi.auth2.getAuthInstance();
         isSignedIn = authInstance.isSignedIn.get();
         
-        console.log('Google Sheets API inicializada correctamente');
+        console.log('🎉 Google Sheets conectado exitosamente');
         updateSyncStatus();
         
     } catch (error) {
-        console.error('Error inicializando Google Sheets:', error);
-        showMessage('mainMessage', 'Error conectando con Google Sheets', 'error');
+        console.error('❌ Error conectando Google Sheets:', error);
+        showMessage('mainMessage', 'Error conectando con Google Sheets: ' + error.message, 'error');
     }
 }
         async function signInToGoogle() {
