@@ -7,6 +7,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://apis.google.com/js/api.js"></script>
+    <script>
+// Configuración Google Sheets
+const GOOGLE_CONFIG = {
+    apiKey: 'AIzaSyABHF9mGVKO1lVy4so24a2Mhg9BMEmxZgY',
+    clientId: '296729679151-8lrl0a42vspajh0d3unqugji1d5a9v9g.apps.googleusercontent.com', 
+    spreadsheetId: '1dDe8Cw48uCnmCqGH1TzMmy0XB80VZxgLRinlT3FE12M',
+    scope: 'https://www.googleapis.com/auth/spreadsheets'
+};
+</script>
     <!-- Íconos para PWA -->
     <link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDE4MCAxODAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxODAiIGhlaWdodD0iMTgwIiByeD0iMzAiIGZpbGw9IiMyZDVhMjciLz4KPHN2ZyB4PSI0MCIgeT0iNDAiIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+CjxlbGxpcHNlIGN4PSI1MCIgY3k9IjUwIiByeD0iMTUiIHJ5PSIzNSIgZmlsbD0iI0ZGRDcwMCIvPgo8Y2lyY2xlIGN4PSI0NSIgY3k9IjMwIiByPSIzIiBmaWxsPSIjRkZFNTVDIiBvcGFjaXR5PSIwLjgiLz4KPGNpcmNsZSBjeD0iNTUiIGN5PSIzMCIgcj0iMyIgZmlsbD0iI0ZGRTU1QyIgb3BhY2l0eT0iMC44Ii8+CjxjaXJjbGUgY3g9IjUwIiBjeT0iNDAiIHI9IjMiIGZpbGw9IiNGRkU1NUMiIG9wYWNpdHk9IjAuOCIvPgo8Y2lyY2xlIGN4PSI0NSIgY3k9IjUwIiByPSIzIiBmaWxsPSIjRkZFNTVDIiBvcGFjaXR5PSIwLjgiLz4KPGNpcmNsZSBjeD0iNTUiIGN5PSI1MCIgcj0iMyIgZmlsbD0iI0ZGRTU1QyIgb3BhY2l0eT0iMC44Ii8+CjxjaXJjbGUgY3g9IjUwIiBjeT0iNjAiIHI9IjMiIGZpbGw9IiNGRkU1NUMiIG9wYWNpdHk9IjAuOCIvPgo8L3N2Zz4KPHRleHQgeD0iOTAiIHk9IjEwNSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE4IiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0iI0ZGRkZGRiI+VFdJTjwvdGV4dD4KPHRleHQgeD0iOTAiIHk9IjEzMCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBmaWxsPSIjRkZGRkZGIj5BZ3JvPC90ZXh0Pgo8L3N2Zz4=">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2392,6 +2401,150 @@ function importAllData() {
     
     reader.readAsText(file);
 }
+        // Inicialización de Google Sheets API
+let gapi, isInitialized = false, isSignedIn = false;
+
+async function initializeGoogleSheets() {
+    try {
+        await new Promise(resolve => {
+            if (window.gapi) {
+                resolve();
+            } else {
+                const script = document.createElement('script');
+                script.src = 'https://apis.google.com/js/api.js';
+                script.onload = resolve;
+                document.head.appendChild(script);
+            }
+        });
+
+        await window.gapi.load('client:auth2', async () => {
+            await window.gapi.client.init({
+                apiKey: GOOGLE_CONFIG.apiKey,
+                clientId: GOOGLE_CONFIG.clientId,
+                scope: GOOGLE_CONFIG.scope,
+                discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4']
+            });
+
+            isInitialized = true;
+            const authInstance = window.gapi.auth2.getAuthInstance();
+            isSignedIn = authInstance.isSignedIn.get();
+            
+            console.log('Google Sheets API inicializada');
+            updateSyncStatus();
+        });
+    } catch (error) {
+        console.error('Error inicializando Google Sheets:', error);
+        showMessage('mainMessage', 'Error conectando con Google Sheets', 'error');
+    }
+}
+        async function signInToGoogle() {
+    if (!isInitialized) {
+        await initializeGoogleSheets();
+    }
+    
+    try {
+        const authInstance = window.gapi.auth2.getAuthInstance();
+        await authInstance.signIn();
+        isSignedIn = true;
+        updateSyncStatus();
+        showMessage('mainMessage', '¡Conectado a Google Sheets!', 'success');
+        return true;
+    } catch (error) {
+        console.error('Error al conectar:', error);
+        showMessage('mainMessage', 'Error al conectar con Google', 'error');
+        return false;
+    }
+}
+
+async function writeToSheet(sheetName, data) {
+    if (!isSignedIn) {
+        const connected = await signInToGoogle();
+        if (!connected) return false;
+    }
+    
+    try {
+        const range = `${sheetName}!A1:Z1000`;
+        await window.gapi.client.sheets.spreadsheets.values.clear({
+            spreadsheetId: GOOGLE_CONFIG.spreadsheetId,
+            range: range
+        });
+        
+        if (data.length > 0) {
+            const headers = Object.keys(data[0]);
+            const rows = [headers, ...data.map(item => headers.map(key => item[key] || ''))];
+            
+            await window.gapi.client.sheets.spreadsheets.values.update({
+                spreadsheetId: GOOGLE_CONFIG.spreadsheetId,
+                range: `${sheetName}!A1`,
+                valueInputOption: 'RAW',
+                resource: { values: rows }
+            });
+        }
+        
+        return true;
+    } catch (error) {
+        console.error(`Error escribiendo en ${sheetName}:`, error);
+        return false;
+    }
+}
+
+function updateSyncStatus() {
+    const statusElement = document.getElementById('syncStatus');
+    if (statusElement) {
+        if (isSignedIn) {
+            statusElement.innerHTML = '<i class="fas fa-cloud-upload-alt sync-connected"></i> <span class="sync-connected">Google Sheets</span>';
+        } else {
+            statusElement.innerHTML = '<i class="fas fa-database"></i> <span>Datos Locales</span>';
+        }
+    }
+}
+        async function syncToGoogleSheets() {
+    if (!isSignedIn) {
+        const connected = await signInToGoogle();
+        if (!connected) return false;
+    }
+    
+    try {
+        showMessage('mainMessage', 'Sincronizando con Google Sheets...', 'info');
+        
+        await writeToSheet('Clientes', clients);
+        await writeToSheet('Lotes', lotes);
+        await writeToSheet('Productos', products);
+        await writeToSheet('Recetas', recipes);
+        await writeToSheet('Usuarios', users);
+        
+        showMessage('mainMessage', '¡Datos sincronizados con Google Sheets!', 'success');
+        return true;
+    } catch (error) {
+        console.error('Error sincronizando:', error);
+        showMessage('mainMessage', 'Error en la sincronización', 'error');
+        return false;
+    }
+}
+
+// Modificar función saveData para usar Google Sheets
+const originalSaveData = saveData;
+async function saveData() {
+    // Guardar localmente primero
+    originalSaveData();
+    
+    // Intentar sincronizar con Google Sheets
+    if (isInitialized) {
+        await syncToGoogleSheets();
+    }
+}
+
+// Inicializar al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    setupEventListeners();
+    loadSavedCredentials();
+    loadInitialData();
+    
+    // Inicializar Google Sheets
+    setTimeout(() => {
+        initializeGoogleSheets();
+    }, 1000);
+});
     </script>
 </body>
 </html>
