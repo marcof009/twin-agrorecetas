@@ -1964,11 +1964,13 @@ function filterRecipesByClient() {
         }
 
         function showRecipeForm() {
-            const form = document.getElementById('recipeForm');
-            form.classList.toggle('hidden');
-            updateClientDropdowns();
-        }
-
+    const form = document.getElementById('recipeForm');
+    form.classList.toggle('hidden');
+    updateClientDropdowns();
+    loadProductsDropdown();  // ← Esta línea debe estar
+    selectedRecipeProducts = [];
+    updateSelectedProductsDisplay();
+}
         function loadClientLotes() {
             const clientId = parseInt(document.getElementById('recipeClient').value);
             const loteSelect = document.getElementById('recipeLote');
