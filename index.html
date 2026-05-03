@@ -1218,9 +1218,16 @@
             reader.onload = function(e) {
                 try {
                     const csv = e.target.result;
-                    console.log('Contenido CSV:', csv);
-                    
-                    const lines = csv.split('\n').filter(line => line.trim() !== '');
+console.log('Contenido CSV:', csv);
+
+// Limpiar enlaces automáticos que algunos sistemas agregan
+const cleanedCSV = csv
+    .replace(/\[([^\]]+)\]\(mailto:[^)]+\)/g, '$1')  // Quitar [email](mailto:email)
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');        // Quitar otros enlaces
+
+console.log('CSV limpio:', cleanedCSV);
+
+const lines = cleanedCSV.split('\n').filter(line => line.trim() !== '');
                     console.log('Líneas procesadas:', lines);
                     
                     if (lines.length < 2) {
