@@ -13,6 +13,7 @@ const GOOGLE_CONFIG = {
     clientId: '296729679151-8lrl0a42vspajh0d3unqugji1d5a9v9g.apps.googleusercontent.com', 
     spreadsheetId: '1dDe8Cw48uCnmCqGH1TzMmy0XB80VZxgLRinlT3FE12M',
     scope: 'https://www.googleapis.com/auth/spreadsheets'
+    scriptUrl: 'https://script.google.com/macros/s/AKfycby-zrMrJPKruVCEoqbdR0AS3av3RZ3l-QzJVHtpbzz_X8v-jssuDeS2mINNHa69E1O3lA/exec'  // ← NUEVA LÍNEA
 };
 </script>
     <!-- Íconos para PWA -->
@@ -2404,31 +2405,14 @@ function importAllData() {
 let gapi, isInitialized = false, isSignedIn = false;
 
 async function initializeGoogleSheets() {
-    try {
-        console.log('🔧 Configurando conexión manual...');
-        
-        // Cambiar status
-        updateSyncStatus(); 
-        
-        // Agregar botón funcional
-        const syncButton = document.createElement('button');
-        syncButton.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Google Sheets';
-        syncButton.className = 'btn btn-small';
-        syncButton.onclick = () => {
-            showMessage('mainMessage', 'Funciona con Export/Import - botón para exportar datos', 'info');
-            exportAllData(); // Usar la función que ya funciona
-        };
-        
-        // Reemplazar status con botón
-        const userInfo = document.querySelector('.user-info');
-        if (userInfo && !document.getElementById('syncButton')) {
-            syncButton.id = 'syncButton';
-            userInfo.prepend(syncButton);
-        }
-        
-    } catch (error) {
-        console.log('⚠️ Usando modo local');
-    }
+    console.log('🚀 Inicializando Google Apps Script...');
+    isInitialized = true;
+    isSignedIn = true; // Apps Script no requiere login
+    updateSyncStatus();
+    
+    // Sincronizar datos existentes
+    await syncToGoogleSheets();
+    console.log('✅ Google Sheets conectado via Apps Script');
 }
 
 function manualGoogleConnect() {
@@ -2495,26 +2479,36 @@ function updateSyncStatus() {
         }
     }
 }
-        async function syncToGoogleSheets() {
-    if (!isSignedIn) {
-        const connected = await signInToGoogle();
-        if (!connected) return false;
-    }
-    
+       async function syncToGoogleSheets() {
     try {
-        showMessage('mainMessage', 'Sincronizando con Google Sheets...', 'info');
+        console.log('📤 Enviando datos a Google Sheets...');
         
-        await writeToSheet('Clientes', clients);
-        await writeToSheet('Lotes', lotes);
-        await writeToSheet('Productos', products);
-        await writeToSheet('Recetas', recipes);
-        await writeToSheet('Usuarios', users);
+        const allData = {
+            clients: clients,
+            lotes: lotes,
+            products: products,
+            recipes: recipes,
+            users: users,
+            timestamp: new Date().toISOString()
+        };
         
-        showMessage('mainMessage', '¡Datos sincronizados con Google Sheets!', 'success');
+        const response = await fetch(GOOGLE_CONFIG.scriptUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'text/plain',
+            },
+            body: JSON.stringify(allData)
+        });
+        
+        const result = await response.text();
+        console.log('📥 Respuesta de Google:', result);
+        
+        showMessage('mainMessage', '✅ Datos sincronizados con Google Sheets', 'success');
         return true;
+        
     } catch (error) {
-        console.error('Error sincronizando:', error);
-        showMessage('mainMessage', 'Error en la sincronización', 'error');
+        console.error('❌ Error sincronizando:', error);
+        showMessage('mainMessage', 'Error en sincronización: ' + error.message, 'error');
         return false;
     }
 }
