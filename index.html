@@ -2057,8 +2057,7 @@ const recipeNumber = (clientRecipes.length + 1).toString().padStart(4, '0');
             
             const newRecipe = {
                 id: Math.max(...recipes.map(r => r.id), 0) + 1,
-recipeNumber: recipeNumber,
-                id: Math.max(...recipes.map(r => r.id), 0) + 1,
+                recipeNumber: recipeNumber,
                 clientId: clientId,
                 clientName: client.name,
                 loteId: loteId,
