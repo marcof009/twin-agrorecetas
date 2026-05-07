@@ -9,11 +9,11 @@
     <script>
 // Configuración Google Sheets
 const GOOGLE_CONFIG = {
-    apiKey: '',
-    clientId: '',
-    spreadsheetId: '',
+    apiKey: localStorage.getItem('googleApiKey') || '',
+    clientId: localStorage.getItem('googleClientId') || '',
+    spreadsheetId: localStorage.getItem('googleSpreadsheetId') || '',
     scope: 'https://www.googleapis.com/auth/spreadsheets',
-    scriptUrl: ''
+    scriptUrl: localStorage.getItem('googleScriptUrl') || ''
 };
 </script>
     <!-- Íconos para PWA -->
