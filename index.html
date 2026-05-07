@@ -880,7 +880,7 @@ const GOOGLE_CONFIG = {
                         
                         <div id="clientForm" class="hidden">
                             <h3>Agregar Nuevo Cliente</h3>
-                            <form class="form-grid" onsubmit="addClient(event)">
+                            <form class="form-grid" onsubmit="addClient(event); return false;">
                                 <div class="form-group">
                                     <label for="clientName">Nombre</label>
                                     <input type="text" id="clientName" required>
@@ -894,7 +894,7 @@ const GOOGLE_CONFIG = {
                                     <input type="tel" id="clientPhone">
                                 </div>
                                 <div class="form-group">
-                                    <button type="submit" class="btn">
+                                    <button type="button" class="btn" onclick="addClient(event)">
                                         Guardar Cliente
                                     </button>
                                 </div>
@@ -929,7 +929,7 @@ const GOOGLE_CONFIG = {
                         
                         <div id="loteForm" class="hidden">
                             <h3>Agregar Nuevo Lote</h3>
-                            <form class="form-grid" onsubmit="addLote(event)">
+                            <form class="form-grid" onsubmit="addLote(event); return false;">
                                 <div class="form-group">
                                     <label for="loteClient">Cliente</label>
                                     <select id="loteClient" required>
@@ -992,7 +992,7 @@ const GOOGLE_CONFIG = {
                         
                         <div id="productForm" class="hidden">
                             <h3>Agregar Nuevo Producto</h3>
-                            <form class="form-grid" onsubmit="addProduct(event)">
+                            <form class="form-grid" onsubmit="addProduct(event); return false;">
                                 <div class="form-group">
                                     <label for="productName">Nombre Comercial</label>
                                     <input type="text" id="productName" required placeholder="ej: Glifosato 48%">
