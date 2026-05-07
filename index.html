@@ -2405,6 +2405,7 @@ function importAllData() {
 let gapi, isInitialized = false, isSignedIn = false;
 
 async function initializeGoogleSheets() {
+    promptForCredentials();
     console.log('🚀 Inicializando Google Apps Script...');
     isInitialized = true;
     isSignedIn = true; // Apps Script no requiere login
@@ -2536,6 +2537,78 @@ document.addEventListener('DOMContentLoaded', function() {
         initializeGoogleSheets();
     }, 1000);
 });
+        // Función para configurar credenciales
+function promptForCredentials() {
+    if (!GOOGLE_CONFIG.apiKey || !GOOGLE_CONFIG.clientId || !GOOGLE_CONFIG.spreadsheetId || !GOOGLE_CONFIG.scriptUrl) {
+        const modal = document.createElement('div');
+        modal.innerHTML = `
+            <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+                <div style="background: white; padding: 2rem; border-radius: 8px; max-width: 500px; width: 90%;">
+                    <h3 style="margin-top: 0;">🔒 Configurar Google Sheets</h3>
+                    <p style="color: #666;">Ingresa tus credenciales para habilitar sincronización automática:</p>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem;">API Key:</label>
+                        <input type="text" id="apiKeyInput" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem;">Client ID:</label>
+                        <input type="text" id="clientIdInput" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem;">Spreadsheet ID:</label>
+                        <input type="text" id="spreadsheetIdInput" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem;">Script URL:</label>
+                        <input type="text" id="scriptUrlInput" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                    </div>
+                    
+                    <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                        <button onclick="saveCredentials()" style="flex: 1; padding: 0.75rem; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">Guardar</button>
+                        <button onclick="skipCredentials()" style="flex: 1; padding: 0.75rem; background: #ccc; color: black; border: none; border-radius: 4px; cursor: pointer;">Omitir</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        modal.id = 'credentialsModal';
+    }
+}
+
+function saveCredentials() {
+    const apiKey = document.getElementById('apiKeyInput').value.trim();
+    const clientId = document.getElementById('clientIdInput').value.trim();
+    const spreadsheetId = document.getElementById('spreadsheetIdInput').value.trim();
+    const scriptUrl = document.getElementById('scriptUrlInput').value.trim();
+    
+    if (apiKey && clientId && spreadsheetId && scriptUrl) {
+        localStorage.setItem('googleApiKey', apiKey);
+        localStorage.setItem('googleClientId', clientId);
+        localStorage.setItem('googleSpreadsheetId', spreadsheetId);
+        localStorage.setItem('googleScriptUrl', scriptUrl);
+        
+        // Actualizar configuración
+        GOOGLE_CONFIG.apiKey = apiKey;
+        GOOGLE_CONFIG.clientId = clientId;
+        GOOGLE_CONFIG.spreadsheetId = spreadsheetId;
+        GOOGLE_CONFIG.scriptUrl = scriptUrl;
+        
+        document.getElementById('credentialsModal').remove();
+        showMessage('mainMessage', '✅ Credenciales guardadas. Habilitando sincronización...', 'success');
+        initializeGoogleSheets();
+    } else {
+        alert('Por favor completa todos los campos');
+    }
+}
+
+function skipCredentials() {
+    document.getElementById('credentialsModal').remove();
+    showMessage('mainMessage', 'Continuando en modo local. Usa Export/Import para sincronizar.', 'info');
+}
     </script>
 </body>
 </html>
