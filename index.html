@@ -3282,6 +3282,322 @@ lotes[loteIndex].destino = destino;
 /*
 <p><strong>🎯 Destino:</strong> ${recipe.destino}</p>
 */
+        // ====== LISTAS PERSONALIZADAS PARA FORMULARIOS ======
+// Agregar este código al final del script de tu index.html
+
+// DATOS PERSONALIZADOS DEL USUARIO
+const cultivosPersonalizados = [
+    "Trigo", "Cebada", "Soja", "Maíz", "Girasol", "Sorgo Forrajero", "Sorgo silaje", 
+    "Maiz pastoreo", "Avena cosecha", "Avena pastoreo", "Avena/Vicia", "Rye Grass", 
+    "Cebada forrajera", "Pastura AA", "Campo natural", "Agropiro", "Disqueado", 
+    "Rast Trigo", "Rast Cebada", "Rast Maiz", "Rast Maiz 2da", "Rast Soja", 
+    "Rast Soja 2da", "Rast Girasol", "Rast Girasol 2da", "Rast Sorgo", 
+    "Rast Avena", "Rast Avena/Vicia", "Rast Rye Grass"
+];
+
+const variedadesPersonalizadas = [
+    "Andreia", "Montoya", "Overture", "Charles", "Baguette 802", "Baguette 820", 
+    "Baguette 620", "SY 109", "SY 120", "Fresco", "Sofia", "Lola", 
+    "DK 72-20 PRO 4", "DK 72-10 PRO4", "DK 72-72 TRE", "DK 69-62 TRE", 
+    "Stine 9741 VIP", "Stine 9734 VIP", "Stine 9939 VIP", "BASF 7344", 
+    "Pioneer 2021 ENLIST", "Pioneer 0622", "Hijo RR", "SYN 3970 CL", 
+    "NK 3969 CL", "NK 3979 CLHO", "SYN 3939 CL", "ADN 5807 CL", 
+    "ADV 5205 CLHO", "ACA 220 CL", "Speciosa 22p01", "Basso 6104", 
+    "Basso 5802", "Speciosa 5636 CL", "Magno", "Horizon", "Mijo Perla"
+];
+
+const destinosPersonalizados = [
+    "Trigo", "Cebada", "Soja", "Maíz", "Girasol", "Sorgo Forrajero", "Sorgo silaje", 
+    "Maiz pastoreo", "Avena cosecha", "Avena pastoreo", "Avena/Vicia", "Rye Grass", 
+    "Cebada forrajera", "Pastura AA", "Agropiro"
+];
+
+// FUNCIÓN MEJORADA PARA CARGAR CULTIVOS PERSONALIZADOS
+function getUniqueCultivos() {
+    // Combinar cultivos de lotes existentes + predefinidos
+    const cultivosExistentes = [...new Set(lotes.map(l => l.cultivo).filter(c => c && c.trim() !== ''))];
+    const todosCultivos = [...new Set([...cultivosPersonalizados, ...cultivosExistentes])];
+    return todosCultivos.sort();
+}
+
+// FUNCIÓN MEJORADA PARA CARGAR VARIEDADES PERSONALIZADAS
+function getUniqueVariedades() {
+    // Combinar variedades de lotes existentes + predefinidas
+    const variedadesExistentes = [...new Set(lotes.map(l => l.variedad).filter(v => v && v.trim() !== ''))];
+    const todasVariedades = [...new Set([...variedadesPersonalizadas, ...variedadesExistentes])];
+    return todasVariedades.sort();
+}
+
+// FUNCIÓN MEJORADA PARA CARGAR DESTINOS PERSONALIZADOS
+function getUniqueDestinos() {
+    // Combinar destinos de lotes existentes + predefinidos
+    const destinosExistentes = [...new Set(lotes.map(l => l.destino).filter(d => d && d.trim() !== ''))];
+    const todosDestinos = [...new Set([...destinosPersonalizados, ...destinosExistentes])];
+    return todosDestinos.sort();
+}
+
+// FUNCIÓN MEJORADA PARA CARGAR DROPDOWNS CON DATOS PERSONALIZADOS
+function loadCultivoDestinoDropdowns() {
+    const cultivoSelect = document.getElementById('recipeCultivo');
+    const destinoSelect = document.getElementById('recipeDestino');
+    
+    if (cultivoSelect) {
+        const cultivos = getUniqueCultivos();
+        cultivoSelect.innerHTML = '<option value="">Seleccionar cultivo</option>';
+        
+        cultivos.forEach(cultivo => {
+            const option = document.createElement('option');
+            option.value = cultivo;
+            option.textContent = cultivo;
+            cultivoSelect.appendChild(option);
+        });
+        
+        // Opción para agregar nuevo cultivo
+        const newOption = document.createElement('option');
+        newOption.value = 'nuevo';
+        newOption.textContent = '+ Agregar nuevo cultivo';
+        newOption.style.fontStyle = 'italic';
+        newOption.style.color = '#666';
+        cultivoSelect.appendChild(newOption);
+        
+        // Event listener para nuevo cultivo
+        cultivoSelect.addEventListener('change', function() {
+            if (this.value === 'nuevo') {
+                const newCultivo = prompt('Ingresa el nuevo cultivo:');
+                if (newCultivo && newCultivo.trim()) {
+                    const option = document.createElement('option');
+                    option.value = newCultivo.trim();
+                    option.textContent = newCultivo.trim();
+                    option.selected = true;
+                    // Insertar antes del "Agregar nuevo"
+                    this.insertBefore(option, this.lastElementChild);
+                } else {
+                    this.value = '';
+                }
+            }
+        });
+    }
+    
+    if (destinoSelect) {
+        const destinos = getUniqueDestinos();
+        destinoSelect.innerHTML = '<option value="">Seleccionar destino</option>';
+        
+        destinos.forEach(destino => {
+            const option = document.createElement('option');
+            option.value = destino;
+            option.textContent = destino;
+            destinoSelect.appendChild(option);
+        });
+        
+        // Opción para agregar nuevo destino
+        const newOption = document.createElement('option');
+        newOption.value = 'nuevo';
+        newOption.textContent = '+ Agregar nuevo destino';
+        newOption.style.fontStyle = 'italic';
+        newOption.style.color = '#666';
+        destinoSelect.appendChild(newOption);
+        
+        // Event listener para nuevo destino
+        destinoSelect.addEventListener('change', function() {
+            if (this.value === 'nuevo') {
+                const newDestino = prompt('Ingresa el nuevo destino:');
+                if (newDestino && newDestino.trim()) {
+                    const option = document.createElement('option');
+                    option.value = newDestino.trim();
+                    option.textContent = newDestino.trim();
+                    option.selected = true;
+                    // Insertar antes del "Agregar nuevo"
+                    this.insertBefore(option, this.lastElementChild);
+                } else {
+                    this.value = '';
+                }
+            }
+        });
+    }
+}
+
+// FUNCIÓN PARA CARGAR VARIEDAD PERSONALIZADA EN FORMULARIO DE LOTES
+function loadVariedadDropdown() {
+    const variedadSelect = document.getElementById('loteVariedad');
+    
+    if (variedadSelect) {
+        // Convertir input a select si no está convertido
+        if (variedadSelect.tagName === 'INPUT') {
+            const newSelect = document.createElement('select');
+            newSelect.id = 'loteVariedad';
+            newSelect.name = 'loteVariedad';
+            newSelect.className = variedadSelect.className;
+            
+            const variedades = getUniqueVariedades();
+            newSelect.innerHTML = '<option value="">Seleccionar variedad</option>';
+            
+            variedades.forEach(variedad => {
+                const option = document.createElement('option');
+                option.value = variedad;
+                option.textContent = variedad;
+                newSelect.appendChild(option);
+            });
+            
+            // Opción para agregar nueva variedad
+            const newOption = document.createElement('option');
+            newOption.value = 'nueva';
+            newOption.textContent = '+ Agregar nueva variedad';
+            newOption.style.fontStyle = 'italic';
+            newOption.style.color = '#666';
+            newSelect.appendChild(newOption);
+            
+            // Event listener para nueva variedad
+            newSelect.addEventListener('change', function() {
+                if (this.value === 'nueva') {
+                    const newVariedad = prompt('Ingresa la nueva variedad:');
+                    if (newVariedad && newVariedad.trim()) {
+                        const option = document.createElement('option');
+                        option.value = newVariedad.trim();
+                        option.textContent = newVariedad.trim();
+                        option.selected = true;
+                        // Insertar antes del "Agregar nueva"
+                        this.insertBefore(option, this.lastElementChild);
+                    } else {
+                        this.value = '';
+                    }
+                }
+            });
+            
+            // Reemplazar input con select
+            variedadSelect.parentNode.replaceChild(newSelect, variedadSelect);
+        }
+    }
+}
+
+// FUNCIÓN PARA CARGAR CULTIVO PERSONALIZADO EN FORMULARIO DE LOTES
+function loadCultivoDropdownLotes() {
+    const cultivoSelect = document.getElementById('loteCultivo');
+    
+    if (cultivoSelect) {
+        // Convertir input a select si no está convertido
+        if (cultivoSelect.tagName === 'INPUT') {
+            const newSelect = document.createElement('select');
+            newSelect.id = 'loteCultivo';
+            newSelect.name = 'loteCultivo';
+            newSelect.required = true;
+            newSelect.className = cultivoSelect.className;
+            
+            const cultivos = getUniqueCultivos();
+            newSelect.innerHTML = '<option value="">Seleccionar cultivo</option>';
+            
+            cultivos.forEach(cultivo => {
+                const option = document.createElement('option');
+                option.value = cultivo;
+                option.textContent = cultivo;
+                newSelect.appendChild(option);
+            });
+            
+            // Opción para agregar nuevo cultivo
+            const newOption = document.createElement('option');
+            newOption.value = 'nuevo';
+            newOption.textContent = '+ Agregar nuevo cultivo';
+            newOption.style.fontStyle = 'italic';
+            newOption.style.color = '#666';
+            newSelect.appendChild(newOption);
+            
+            // Event listener para nuevo cultivo
+            newSelect.addEventListener('change', function() {
+                if (this.value === 'nuevo') {
+                    const newCultivo = prompt('Ingresa el nuevo cultivo:');
+                    if (newCultivo && newCultivo.trim()) {
+                        const option = document.createElement('option');
+                        option.value = newCultivo.trim();
+                        option.textContent = newCultivo.trim();
+                        option.selected = true;
+                        // Insertar antes del "Agregar nuevo"
+                        this.insertBefore(option, this.lastElementChild);
+                    } else {
+                        this.value = '';
+                    }
+                }
+            });
+            
+            // Reemplazar input con select
+            cultivoSelect.parentNode.replaceChild(newSelect, cultivoSelect);
+        }
+    }
+}
+
+// MODIFICAR FUNCIÓN showLoteForm PARA INCLUIR DROPDOWNS PERSONALIZADOS
+function showLoteForm() {
+    const form = document.getElementById('loteForm');
+    form.classList.toggle('hidden');
+    updateClientDropdowns();
+    
+    // Cargar dropdowns personalizados para cultivo y variedad
+    setTimeout(() => {
+        loadCultivoDropdownLotes();
+        loadVariedadDropdown();
+    }, 100);
+}
+
+// MODIFICAR FUNCIÓN showRecipeForm PARA INCLUIR DROPDOWNS PERSONALIZADOS
+function showRecipeForm() {
+    const form = document.getElementById('recipeForm');
+    form.classList.toggle('hidden');
+    updateClientDropdowns();
+    loadProductsDropdown();
+    
+    // Cargar dropdowns personalizados
+    setTimeout(() => {
+        loadCultivoDestinoDropdowns();
+    }, 100);
+    
+    selectedRecipeProducts = [];
+    updateSelectedProductsDisplay();
+}
+
+// MODIFICAR addLote PARA INCLUIR DESTINO
+function addLote(e) {
+    e.preventDefault();
+    
+    const clientId = parseInt(document.getElementById('loteClient').value);
+    const campo = document.getElementById('loteCampo').value.trim();
+    const nombre = document.getElementById('loteNombre').value.trim();
+    const superficie = parseFloat(document.getElementById('loteSuperficie').value);
+    const cultivo = document.getElementById('loteCultivo').value.trim();
+    const variedad = document.getElementById('loteVariedad').value.trim();
+    const destino = document.getElementById('loteDestino').value.trim();
+    
+    const newLote = {
+        id: Math.max(...lotes.map(l => l.id), 0) + 1,
+        clientId: clientId,
+        campo: campo,
+        lote: nombre,
+        superficie: superficie,
+        cultivo: cultivo,
+        variedad: variedad,
+        destino: destino,
+        coordinates: []
+    };
+    
+    lotes.push(newLote);
+    saveData();
+    loadLotesSection();
+    
+    // Limpiar formulario
+    document.getElementById('loteClient').value = '';
+    document.getElementById('loteCampo').value = '';
+    document.getElementById('loteNombre').value = '';
+    document.getElementById('loteSuperficie').value = '';
+    document.getElementById('loteCultivo').value = '';
+    document.getElementById('loteVariedad').value = '';
+    document.getElementById('loteDestino').value = '';
+    
+    showMessage('mainMessage', 'Lote agregado exitosamente', 'success');
+    document.getElementById('loteForm').classList.add('hidden');
+}
+
+console.log('✅ Listas personalizadas cargadas:', {
+    cultivos: cultivosPersonalizados.length,
+    variedades: variedadesPersonalizadas.length, 
+    destinos: destinosPersonalizados.length
+});
     </script>
 </body>
 </html>
