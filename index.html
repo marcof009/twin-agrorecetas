@@ -1195,9 +1195,11 @@ const GOOGLE_CONFIG = {
             ],
             recipes: [],
             users: [
-                { email: "admin@agro.com", password: "admin123", name: "Administrador", role: "admin", clientId: null },
-                { email: "marcosf009@gmail.com", password: "admin58737", name: "Marcos Fernández", role: "admin", clientId: null }
-            ]
+    { email: "admin@agro.com", password: "admin123", name: "Administrador", role: "admin", clientId: null },
+    { email: "marcosf009@gmail.com", password: "admin58737", name: "Marcos Fernández", role: "admin", clientId: null },
+    { email: "operador1@agro.com", password: "op123", name: "Juan Operador", role: "operador", clientId: 1 },
+    { email: "operador2@agro.com", password: "op123", name: "María Aplicadora", role: "operador", clientId: 1 }
+]
         };
 
         // Inicialización
@@ -2687,6 +2689,297 @@ const GOOGLE_CONFIG = {
             
             reader.readAsText(file);
         }
+        // ====== FUNCIONES ADICIONALES PARA EMPLEADOS ======
+// Agregar estas funciones al final del script de tu index.html
+
+// Función para mostrar recetas del empleado
+function loadEmployeeRecipes() {
+    const container = document.getElementById('recipesList');
+    
+    // Filtrar recetas asignadas al usuario actual o sin asignar si es operador
+    let userRecipes = [];
+    if (currentUser.role === 'operador') {
+        userRecipes = recipes.filter(r => 
+            r.assignedTo === currentUser.email || 
+            (!r.assignedTo && r.status === 'pendiente')
+        );
+    } else {
+        userRecipes = recipes; // Admin ve todas
+    }
+    
+    if (userRecipes.length === 0) {
+        container.innerHTML = '<p>No tienes recetas asignadas.</p>';
+        return;
+    }
+    
+    const pendingRecipes = userRecipes.filter(r => r.status === 'pendiente');
+    const completedRecipes = userRecipes.filter(r => r.status === 'completado');
+    
+    container.innerHTML = `
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+            <!-- Recetas Pendientes -->
+            <div class="content-card" style="border-left: 4px solid var(--warning);">
+                <h3 style="color: var(--warning); margin-bottom: 1rem;">
+                    <i class="fas fa-clock"></i> Pendientes (${pendingRecipes.length})
+                </h3>
+                ${pendingRecipes.map(recipe => `
+                    <div class="recipe-card" style="border: 1px solid var(--border); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; background: var(--surface);">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                            <div>
+                                <h4>Receta ${recipe.recipeNumber}</h4>
+                                <p><strong>Cliente:</strong> ${recipe.clientName}</p>
+                                <p><strong>Lote:</strong> ${recipe.campo} - ${recipe.lote}</p>
+                                <p><strong>Superficie:</strong> ${recipe.hectareas} ha</p>
+                                <p><strong>Objetivo:</strong> ${recipe.objetivo}</p>
+                                <p><strong>Urgencia:</strong> <span style="color: var(--warning);">${recipe.urgencia}</span></p>
+                            </div>
+                        </div>
+                        
+                        <div style="background: var(--secondary); padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
+                            <h5>Productos a aplicar:</h5>
+                            ${recipe.products.map(p => `
+                                <div style="margin: 0.5rem 0;">
+                                    • <strong>${p.productName}</strong>: ${p.dosis} ${p.unidad}
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        ${recipe.observaciones ? `<p><strong>Observaciones:</strong> ${recipe.observaciones}</p>` : ''}
+                        
+                        <button class="btn btn-small" onclick="showCompleteRecipeForm(${recipe.id})" style="margin-top: 1rem;">
+                            <i class="fas fa-check"></i> Completar Aplicación
+                        </button>
+                    </div>
+                `).join('')}
+            </div>
+            
+            <!-- Recetas Completadas -->
+            <div class="content-card" style="border-left: 4px solid var(--success);">
+                <h3 style="color: var(--success); margin-bottom: 1rem;">
+                    <i class="fas fa-check-circle"></i> Completadas (${completedRecipes.length})
+                </h3>
+                ${completedRecipes.map(recipe => `
+                    <div class="recipe-card" style="border: 1px solid var(--border); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; background: var(--surface);">
+                        <h4>Receta ${recipe.recipeNumber}</h4>
+                        <p><strong>Cliente:</strong> ${recipe.clientName}</p>
+                        <p><strong>Lote:</strong> ${recipe.campo} - ${recipe.lote}</p>
+                        <p><strong>Fecha aplicación:</strong> <span style="color: var(--success);">${recipe.dateCompleted || 'No especificada'}</span></p>
+                        <p><strong>Aplicada por:</strong> ${recipe.completedBy || 'No especificado'}</p>
+                        ${recipe.completionNotes ? `<p><strong>Observaciones:</strong> ${recipe.completionNotes}</p>` : ''}
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+        
+        <!-- Modal para completar receta -->
+        <div id="completeRecipeModal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+            <div style="background: white; padding: 2rem; border-radius: 8px; max-width: 500px; width: 90%;">
+                <h3 style="margin-top: 0;">✅ Completar Aplicación</h3>
+                <p style="color: #666; margin-bottom: 1.5rem;">Registra la fecha de ejecución y observaciones de la aplicación:</p>
+                
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Fecha de Aplicación:</label>
+                    <input type="date" id="completionDate" style="width: 100%; padding: 0.75rem; border: 1px solid #ccc; border-radius: 4px;" required>
+                </div>
+                
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Observaciones de la aplicación:</label>
+                    <textarea id="completionNotes" rows="4" style="width: 100%; padding: 0.75rem; border: 1px solid #ccc; border-radius: 4px; font-family: inherit; resize: vertical;" placeholder="Condiciones climáticas, dificultades encontradas, resultados observados, etc."></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                    <button onclick="confirmCompleteRecipe()" style="flex: 1; padding: 0.75rem; background: var(--success); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">
+                        <i class="fas fa-check"></i> Completar
+                    </button>
+                    <button onclick="cancelCompleteRecipe()" style="flex: 1; padding: 0.75rem; background: #ccc; color: black; border: none; border-radius: 4px; cursor: pointer;">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Variable global para almacenar el ID de la receta que se está completando
+let currentCompletingRecipeId = null;
+
+// Función para mostrar el formulario de completar receta
+function showCompleteRecipeForm(recipeId) {
+    const recipe = recipes.find(r => r.id === recipeId);
+    if (!recipe) return;
+    
+    currentCompletingRecipeId = recipeId;
+    
+    // Establecer la fecha de hoy por defecto
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('completionDate').value = today;
+    document.getElementById('completionNotes').value = '';
+    
+    // Mostrar modal
+    document.getElementById('completeRecipeModal').classList.remove('hidden');
+}
+
+// Función para confirmar completar la receta
+function confirmCompleteRecipe() {
+    const completionDate = document.getElementById('completionDate').value;
+    const completionNotes = document.getElementById('completionNotes').value.trim();
+    
+    if (!completionDate) {
+        alert('Por favor selecciona la fecha de aplicación');
+        return;
+    }
+    
+    const recipeIndex = recipes.findIndex(r => r.id === currentCompletingRecipeId);
+    if (recipeIndex !== -1) {
+        recipes[recipeIndex].status = 'completado';
+        recipes[recipeIndex].dateCompleted = completionDate;
+        recipes[recipeIndex].completedBy = currentUser.name;
+        recipes[recipeIndex].completionNotes = completionNotes;
+        
+        saveData();
+        loadRecipesSection();
+        loadDashboardData();
+        
+        showMessage('mainMessage', `✅ Receta ${recipes[recipeIndex].recipeNumber} marcada como completada`, 'success');
+    }
+    
+    cancelCompleteRecipe();
+}
+
+// Función para cancelar completar receta
+function cancelCompleteRecipe() {
+    document.getElementById('completeRecipeModal').classList.add('hidden');
+    currentCompletingRecipeId = null;
+}
+
+// Modificar la función loadRecipesSection existente
+function loadRecipesSection() {
+    if (currentUser.role === 'operador') {
+        loadEmployeeRecipes();
+    } else {
+        loadAdminRecipesSection();
+    }
+}
+
+// Nueva función para admin (la funcionalidad original)
+function loadAdminRecipesSection() {
+    const container = document.getElementById('recipesList');
+    
+    if (recipes.length === 0) {
+        container.innerHTML = '<p>No hay recetas creadas.</p>';
+        return;
+    }
+    
+    // Tabla completa para administradores
+    const table = `
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Receta #</th>
+                    <th>Cliente</th>
+                    <th>Lote</th>
+                    <th>Objetivo</th>
+                    <th>Urgencia</th>
+                    <th>Estado</th>
+                    <th>Fecha Creación</th>
+                    <th>Fecha Aplicación</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${recipes.map(recipe => `
+                    <tr>
+                        <td>${recipe.recipeNumber}</td>
+                        <td>${recipe.clientName}</td>
+                        <td>${recipe.campo} - ${recipe.lote}</td>
+                        <td>${recipe.objetivo}</td>
+                        <td>
+                            <span style="color: ${recipe.urgencia === 'ya' ? 'var(--error)' : 'var(--warning)'}">${recipe.urgencia}</span>
+                        </td>
+                        <td>
+                            <span style="color: ${recipe.status === 'completado' ? 'var(--success)' : 'var(--warning)'}">
+                                ${recipe.status === 'completado' ? '✅ Completada' : '⏳ Pendiente'}
+                            </span>
+                        </td>
+                        <td>${recipe.dateCreated}</td>
+                        <td>${recipe.dateCompleted || '-'}</td>
+                        <td>
+                            <button class="btn btn-small" onclick="viewRecipeDetails(${recipe.id})" style="margin-right: 0.5rem;">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            ${recipe.status === 'pendiente' ? 
+                                `<button class="btn btn-small" onclick="showCompleteRecipeForm(${recipe.id})">
+                                    <i class="fas fa-check"></i>
+                                </button>` : ''
+                            }
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+    
+    container.innerHTML = table;
+}
+
+// Función para ver detalles de receta (para admin)
+function viewRecipeDetails(recipeId) {
+    const recipe = recipes.find(r => r.id === recipeId);
+    if (!recipe) return;
+    
+    const details = `
+        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; align-items: center; justify-content: center;" onclick="this.remove()">
+            <div style="background: white; padding: 2rem; border-radius: 8px; max-width: 600px; width: 90%; max-height: 80%; overflow-y: auto;" onclick="event.stopPropagation()">
+                <h3 style="margin-top: 0;">📋 Receta ${recipe.recipeNumber} - ${recipe.clientName}</h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                    <div><strong>Lote:</strong> ${recipe.campo} - ${recipe.lote}</div>
+                    <div><strong>Superficie:</strong> ${recipe.hectareas} ha</div>
+                    <div><strong>Cultivo:</strong> ${recipe.cultivo}</div>
+                    <div><strong>Objetivo:</strong> ${recipe.objetivo}</div>
+                    <div><strong>Urgencia:</strong> ${recipe.urgencia}</div>
+                    <div><strong>Estado:</strong> ${recipe.status}</div>
+                </div>
+                
+                <div style="background: var(--secondary); padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
+                    <h4>Productos a aplicar:</h4>
+                    ${recipe.products.map(p => `
+                        <div style="margin: 0.5rem 0; padding: 0.5rem; background: white; border-radius: 4px;">
+                            <strong>${p.productName}</strong>: ${p.dosis} ${p.unidad}
+                        </div>
+                    `).join('')}
+                </div>
+                
+                ${recipe.observaciones ? `<p><strong>Observaciones iniciales:</strong> ${recipe.observaciones}</p>` : ''}
+                
+                ${recipe.status === 'completado' ? `
+                    <div style="border-top: 1px solid #ccc; padding-top: 1rem; margin-top: 1rem;">
+                        <h4 style="color: var(--success);">✅ Aplicación completada</h4>
+                        <p><strong>Fecha:</strong> ${recipe.dateCompleted}</p>
+                        <p><strong>Aplicada por:</strong> ${recipe.completedBy}</p>
+                        ${recipe.completionNotes ? `<p><strong>Observaciones:</strong> ${recipe.completionNotes}</p>` : ''}
+                    </div>
+                ` : ''}
+                
+                <button onclick="this.closest('div').remove()" style="margin-top: 1rem; padding: 0.75rem 1.5rem; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', details);
+}
+
+// ====== MODIFICACIONES A DATOS BASE ======
+// Agregar usuarios operadores a los datos de ejemplo
+const additionalUsers = [
+    { email: "operador1@agro.com", password: "op123", name: "Juan Operador", role: "operador", clientId: null },
+    { email: "operador2@agro.com", password: "op123", name: "María Aplicadora", role: "operador", clientId: null }
+];
+
+// Agregar al baseTestData.users (modificar en tu código principal)
+// baseTestData.users.push(...additionalUsers);
     </script>
 </body>
 </html>
