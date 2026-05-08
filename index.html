@@ -957,6 +957,10 @@ const GOOGLE_CONFIG = {
                                     <input type="text" id="loteVariedad">
                                 </div>
                                 <div class="form-group">
+                                    <label for="loteDestino">Destino</label>
+                                    <input type="text" id="loteDestino" placeholder="ej: Exportación, Mercado interno">
+                                </div>
+                                <div class="form-group">
                                     <button type="button" class="btn" onclick="addLote(event)">
                                         Guardar Lote
                                     </button>
@@ -1079,10 +1083,22 @@ const GOOGLE_CONFIG = {
                                         <option value="">Seleccionar lote</option>
                                     </select>
                                 </div>
-                                <div class="form-group">
-                                    <label for="recipeHectareas">Superficie (ha)</label>
-                                    <input type="number" id="recipeHectareas" step="0.1" required readonly>
-                                </div>
+                               <div class="form-group">
+    <label for="recipeHectareas">Superficie (ha)</label>
+    <input type="number" id="recipeHectareas" step="0.1" required readonly>
+</div>
+<div class="form-group">
+    <label for="recipeCultivo">Cultivo</label>
+    <select id="recipeCultivo" required>
+        <option value="">Seleccionar cultivo</option>
+    </select>
+</div>
+<div class="form-group">
+    <label for="recipeDestino">Destino</label>
+    <select id="recipeDestino" required>
+        <option value="">Seleccionar destino</option>
+    </select>
+</div>
                                 <div class="form-group">
                                     <label for="recipeObjetivo">Objetivo</label>
                                     <select id="recipeObjetivo" required>
@@ -1188,6 +1204,7 @@ const GOOGLE_CONFIG = {
                     superficie: 10, 
                     cultivo: "Soja", 
                     variedad: "DM4670"
+                    destino: "Exportación"
                 }
             ],
             products: [
@@ -2980,6 +2997,292 @@ const additionalUsers = [
 
 // Agregar al baseTestData.users (modificar en tu código principal)
 // baseTestData.users.push(...additionalUsers);
+        // ====== MODIFICACIONES PARA CULTIVO Y DESTINO EN RECETAS ======
+
+// 1. MODIFICAR ESTRUCTURA DE LOTES - Agregar destino
+// En la función addLote, BUSCAR estas líneas:
+/*
+const cultivo = document.getElementById('loteCultivo').value.trim();
+const variedad = document.getElementById('loteVariedad').value.trim();
+
+const newLote = {
+    id: Math.max(...lotes.map(l => l.id), 0) + 1,
+    clientId: clientId,
+    campo: campo,
+    lote: nombre,
+    superficie: superficie,
+    cultivo: cultivo,
+    variedad: variedad,
+    coordinates: []
+};
+*/
+
+// REEMPLAZAR POR:
+/*
+const cultivo = document.getElementById('loteCultivo').value.trim();
+const variedad = document.getElementById('loteVariedad').value.trim();
+const destino = document.getElementById('loteDestino').value.trim();
+
+const newLote = {
+    id: Math.max(...lotes.map(l => l.id), 0) + 1,
+    clientId: clientId,
+    campo: campo,
+    lote: nombre,
+    superficie: superficie,
+    cultivo: cultivo,
+    variedad: variedad,
+    destino: destino,
+    coordinates: []
+};
+*/
+
+// 2. FUNCIONES PARA CARGAR CULTIVOS Y DESTINOS ÚNICOS
+function getUniqueCultivos() {
+    const cultivos = [...new Set(lotes.map(l => l.cultivo).filter(c => c && c.trim() !== ''))];
+    return cultivos.sort();
+}
+
+function getUniqueDestinos() {
+    const destinos = [...new Set(lotes.map(l => l.destino).filter(d => d && d.trim() !== ''))];
+    // Agregar destinos por defecto si no hay ninguno
+    if (destinos.length === 0) {
+        return ['Mercado interno', 'Exportación', 'Procesamiento', 'Semillero'];
+    }
+    return destinos.sort();
+}
+
+// 3. MODIFICAR updateLoteInfo para incluir cultivo y destino
+function updateLoteInfo() {
+    const loteId = parseInt(document.getElementById('recipeLote').value);
+    const hectareasInput = document.getElementById('recipeHectareas');
+    const cultivoSelect = document.getElementById('recipeCultivo');
+    const destinoSelect = document.getElementById('recipeDestino');
+    
+    if (loteId) {
+        const lote = lotes.find(l => l.id === loteId);
+        if (lote) {
+            hectareasInput.value = lote.superficie;
+            
+            // Establecer cultivo del lote seleccionado
+            if (lote.cultivo) {
+                cultivoSelect.value = lote.cultivo;
+            }
+            
+            // Establecer destino del lote seleccionado
+            if (lote.destino) {
+                destinoSelect.value = lote.destino;
+            }
+        }
+    } else {
+        // Limpiar campos si no hay lote seleccionado
+        hectareasInput.value = '';
+        cultivoSelect.value = '';
+        destinoSelect.value = '';
+    }
+}
+
+// 4. FUNCIÓN PARA CARGAR DROPDOWNS DE CULTIVO Y DESTINO EN RECETAS
+function loadCultivoDestinoDropdowns() {
+    const cultivoSelect = document.getElementById('recipeCultivo');
+    const destinoSelect = document.getElementById('recipeDestino');
+    
+    if (cultivoSelect) {
+        const cultivos = getUniqueCultivos();
+        cultivoSelect.innerHTML = '<option value="">Seleccionar cultivo</option>';
+        cultivos.forEach(cultivo => {
+            const option = document.createElement('option');
+            option.value = cultivo;
+            option.textContent = cultivo;
+            cultivoSelect.appendChild(option);
+        });
+        
+        // Permitir agregar nuevo cultivo
+        const newOption = document.createElement('option');
+        newOption.value = 'nuevo';
+        newOption.textContent = '+ Agregar nuevo cultivo';
+        newOption.style.fontStyle = 'italic';
+        newOption.style.color = '#666';
+        cultivoSelect.appendChild(newOption);
+        
+        // Event listener para nuevo cultivo
+        cultivoSelect.addEventListener('change', function() {
+            if (this.value === 'nuevo') {
+                const newCultivo = prompt('Ingresa el nuevo cultivo:');
+                if (newCultivo && newCultivo.trim()) {
+                    const option = document.createElement('option');
+                    option.value = newCultivo.trim();
+                    option.textContent = newCultivo.trim();
+                    option.selected = true;
+                    // Insertar antes del "Agregar nuevo"
+                    this.insertBefore(option, this.lastElementChild);
+                } else {
+                    this.value = '';
+                }
+            }
+        });
+    }
+    
+    if (destinoSelect) {
+        const destinos = getUniqueDestinos();
+        destinoSelect.innerHTML = '<option value="">Seleccionar destino</option>';
+        destinos.forEach(destino => {
+            const option = document.createElement('option');
+            option.value = destino;
+            option.textContent = destino;
+            destinoSelect.appendChild(option);
+        });
+        
+        // Permitir agregar nuevo destino
+        const newOption = document.createElement('option');
+        newOption.value = 'nuevo';
+        newOption.textContent = '+ Agregar nuevo destino';
+        newOption.style.fontStyle = 'italic';
+        newOption.style.color = '#666';
+        destinoSelect.appendChild(newOption);
+        
+        // Event listener para nuevo destino
+        destinoSelect.addEventListener('change', function() {
+            if (this.value === 'nuevo') {
+                const newDestino = prompt('Ingresa el nuevo destino:');
+                if (newDestino && newDestino.trim()) {
+                    const option = document.createElement('option');
+                    option.value = newDestino.trim();
+                    option.textContent = newDestino.trim();
+                    option.selected = true;
+                    // Insertar antes del "Agregar nuevo"
+                    this.insertBefore(option, this.lastElementChild);
+                } else {
+                    this.value = '';
+                }
+            }
+        });
+    }
+}
+
+// 5. MODIFICAR showRecipeForm para cargar los dropdowns
+function showRecipeForm() {
+    const form = document.getElementById('recipeForm');
+    form.classList.toggle('hidden');
+    updateClientDropdowns();
+    loadProductsDropdown();
+    loadCultivoDestinoDropdowns(); // NUEVA LÍNEA
+    selectedRecipeProducts = [];
+    updateSelectedProductsDisplay();
+}
+
+// 6. MODIFICAR saveRecipe para incluir cultivo y destino
+function saveRecipe() {
+    const clientId = parseInt(document.getElementById('recipeClient').value);
+    const loteId = parseInt(document.getElementById('recipeLote').value);
+    const hectareas = parseFloat(document.getElementById('recipeHectareas').value);
+    const cultivo = document.getElementById('recipeCultivo').value; // NUEVA LÍNEA
+    const destino = document.getElementById('recipeDestino').value; // NUEVA LÍNEA
+    const objetivo = document.getElementById('recipeObjetivo').value;
+    const urgencia = document.getElementById('recipeUrgencia').value;
+    const caudal = parseFloat(document.getElementById('recipeCaudal').value);
+    const observaciones = document.getElementById('recipeObservaciones').value.trim();
+    
+    if (!clientId || !loteId || !hectareas || !cultivo || !destino || !objetivo || !urgencia) {
+        showMessage('mainMessage', 'Por favor completa todos los campos requeridos', 'error');
+        return;
+    }
+    
+    const client = clients.find(c => c.id === clientId);
+    const lote = lotes.find(l => l.id === loteId);
+    
+    // Generar número de receta por cliente
+    const clientRecipes = recipes.filter(r => r.clientId === clientId);
+    const recipeNumber = (clientRecipes.length + 1).toString().padStart(4, '0');
+    
+    const newRecipe = {
+        id: Math.max(...recipes.map(r => r.id), 0) + 1,
+        recipeNumber: recipeNumber,
+        clientId: clientId,
+        clientName: client.name,
+        loteId: loteId,
+        campo: lote.campo,
+        lote: lote.lote,
+        cultivo: cultivo, // De la selección, no del lote
+        variedad: lote.variedad,
+        destino: destino, // NUEVA LÍNEA
+        hectareas: hectareas,
+        objetivo: objetivo,
+        urgencia: urgencia,
+        caudal: caudal,
+        observaciones: observaciones,
+        products: [...selectedRecipeProducts],
+        status: 'pendiente',
+        dateCreated: new Date().toISOString().split('T')[0]
+    };
+    
+    recipes.push(newRecipe);
+    saveData();
+    loadRecipesSection();
+    loadDashboardData();
+    
+    // Limpiar formulario
+    document.getElementById('recipeClient').value = '';
+    document.getElementById('recipeCampo').value = '';
+    document.getElementById('recipeLote').value = '';
+    document.getElementById('recipeHectareas').value = '';
+    document.getElementById('recipeCultivo').value = ''; // NUEVA LÍNEA
+    document.getElementById('recipeDestino').value = ''; // NUEVA LÍNEA
+    document.getElementById('recipeObjetivo').value = '';
+    document.getElementById('recipeUrgencia').value = '';
+    document.getElementById('recipeCaudal').value = '';
+    document.getElementById('recipeObservaciones').value = '';
+    selectedRecipeProducts = [];
+    updateSelectedProductsDisplay();
+    
+    showMessage('mainMessage', `Receta ${recipeNumber} creada exitosamente`, 'success');
+    document.getElementById('recipeForm').classList.add('hidden');
+}
+
+// 7. ACTUALIZAR DATOS BASE PARA INCLUIR DESTINO EN LOTES
+// En baseTestData.lotes, agregar campo destino:
+/*
+lotes: [
+    { 
+        id: 1, 
+        clientId: 1, 
+        campo: "Campo Ejemplo", 
+        lote: "Lote 1", 
+        superficie: 10, 
+        cultivo: "Soja", 
+        variedad: "DM4670",
+        destino: "Exportación"  // NUEVA LÍNEA
+    }
+]
+*/
+
+// 8. ACTUALIZAR FUNCIONES DE EDICIÓN DE LOTES
+// En editLote, agregar:
+/*
+document.getElementById('loteDestino').value = lote.destino;
+*/
+
+// En updateLote, agregar:
+/*
+const destino = document.getElementById('loteDestino').value.trim();
+lotes[loteIndex].destino = destino;
+*/
+
+// 9. ACTUALIZAR TABLA DE LOTES PARA MOSTRAR DESTINO
+// En loadLotesSection, en el <thead> agregar:
+/*
+<th>Destino</th>
+*/
+
+// Y en el <tbody> agregar:
+/*
+<td>${lote.destino}</td>
+*/
+
+// 10. ACTUALIZAR VISTA DE EMPLEADOS PARA MOSTRAR DESTINO
+// En loadEmployeeRecipes, en las cards de recetas agregar:
+/*
+<p><strong>🎯 Destino:</strong> ${recipe.destino}</p>
+*/
     </script>
 </body>
 </html>
