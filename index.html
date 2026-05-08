@@ -3036,19 +3036,7 @@ const newLote = {
 */
 
 // 2. FUNCIONES PARA CARGAR CULTIVOS Y DESTINOS ÚNICOS
-function getUniqueCultivos() {
-    const cultivos = [...new Set(lotes.map(l => l.cultivo).filter(c => c && c.trim() !== ''))];
-    return cultivos.sort();
-}
 
-function getUniqueDestinos() {
-    const destinos = [...new Set(lotes.map(l => l.destino).filter(d => d && d.trim() !== ''))];
-    // Agregar destinos por defecto si no hay ninguno
-    if (destinos.length === 0) {
-        return ['Mercado interno', 'Exportación', 'Procesamiento', 'Semillero'];
-    }
-    return destinos.sort();
-}
 
 // 3. MODIFICAR updateLoteInfo para incluir cultivo y destino
 function updateLoteInfo() {
@@ -3078,95 +3066,6 @@ function updateLoteInfo() {
         cultivoSelect.value = '';
         destinoSelect.value = '';
     }
-}
-
-// 4. FUNCIÓN PARA CARGAR DROPDOWNS DE CULTIVO Y DESTINO EN RECETAS
-function loadCultivoDestinoDropdowns() {
-    const cultivoSelect = document.getElementById('recipeCultivo');
-    const destinoSelect = document.getElementById('recipeDestino');
-    
-    if (cultivoSelect) {
-        const cultivos = getUniqueCultivos();
-        cultivoSelect.innerHTML = '<option value="">Seleccionar cultivo</option>';
-        cultivos.forEach(cultivo => {
-            const option = document.createElement('option');
-            option.value = cultivo;
-            option.textContent = cultivo;
-            cultivoSelect.appendChild(option);
-        });
-        
-        // Permitir agregar nuevo cultivo
-        const newOption = document.createElement('option');
-        newOption.value = 'nuevo';
-        newOption.textContent = '+ Agregar nuevo cultivo';
-        newOption.style.fontStyle = 'italic';
-        newOption.style.color = '#666';
-        cultivoSelect.appendChild(newOption);
-        
-        // Event listener para nuevo cultivo
-        cultivoSelect.addEventListener('change', function() {
-            if (this.value === 'nuevo') {
-                const newCultivo = prompt('Ingresa el nuevo cultivo:');
-                if (newCultivo && newCultivo.trim()) {
-                    const option = document.createElement('option');
-                    option.value = newCultivo.trim();
-                    option.textContent = newCultivo.trim();
-                    option.selected = true;
-                    // Insertar antes del "Agregar nuevo"
-                    this.insertBefore(option, this.lastElementChild);
-                } else {
-                    this.value = '';
-                }
-            }
-        });
-    }
-    
-    if (destinoSelect) {
-        const destinos = getUniqueDestinos();
-        destinoSelect.innerHTML = '<option value="">Seleccionar destino</option>';
-        destinos.forEach(destino => {
-            const option = document.createElement('option');
-            option.value = destino;
-            option.textContent = destino;
-            destinoSelect.appendChild(option);
-        });
-        
-        // Permitir agregar nuevo destino
-        const newOption = document.createElement('option');
-        newOption.value = 'nuevo';
-        newOption.textContent = '+ Agregar nuevo destino';
-        newOption.style.fontStyle = 'italic';
-        newOption.style.color = '#666';
-        destinoSelect.appendChild(newOption);
-        
-        // Event listener para nuevo destino
-        destinoSelect.addEventListener('change', function() {
-            if (this.value === 'nuevo') {
-                const newDestino = prompt('Ingresa el nuevo destino:');
-                if (newDestino && newDestino.trim()) {
-                    const option = document.createElement('option');
-                    option.value = newDestino.trim();
-                    option.textContent = newDestino.trim();
-                    option.selected = true;
-                    // Insertar antes del "Agregar nuevo"
-                    this.insertBefore(option, this.lastElementChild);
-                } else {
-                    this.value = '';
-                }
-            }
-        });
-    }
-}
-
-// 5. MODIFICAR showRecipeForm para cargar los dropdowns
-function showRecipeForm() {
-    const form = document.getElementById('recipeForm');
-    form.classList.toggle('hidden');
-    updateClientDropdowns();
-    loadProductsDropdown();
-    loadCultivoDestinoDropdowns(); // NUEVA LÍNEA
-    selectedRecipeProducts = [];
-    updateSelectedProductsDisplay();
 }
 
 // 6. MODIFICAR saveRecipe para incluir cultivo y destino
