@@ -1222,10 +1222,6 @@ const GOOGLE_CONFIG = {
             loadSavedLoginCredentials();
             loadInitialData();
             
-            // Inicializar Google Sheets después de un pequeño delay
-            setTimeout(() => {
-                initializeGoogleSheets();
-            }, 1000);
         });
 
         function setupEventListeners() {
