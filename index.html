@@ -1362,15 +1362,22 @@ const GOOGLE_CONFIG = {
                 form.method = 'POST';
                 form.action = GOOGLE_CONFIG.scriptUrl;
                 form.style.display = 'none';
-                
+                form.target = 'hiddenFrame';  // ← AGREGAR ESTA LÍNEA
                 const input = document.createElement('input');
                 input.name = 'postData';
                 input.value = JSON.stringify(allData);
                 form.appendChild(input);
                 
-                document.body.appendChild(form);
-                form.submit();
-                document.body.removeChild(form);
+                // Crear iframe oculto para capturar respuesta
+const iframe = document.createElement('iframe');
+iframe.name = 'hiddenFrame';
+iframe.style.display = 'none';
+document.body.appendChild(iframe);
+
+document.body.appendChild(form);
+form.submit();
+document.body.removeChild(form);
+document.body.removeChild(iframe);
                 
                 console.log('✅ Datos enviados vía formulario');
                 return true;
