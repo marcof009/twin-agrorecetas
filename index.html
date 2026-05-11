@@ -1205,8 +1205,8 @@ const GOOGLE_CONFIG = {
                 }
             ],
             products: [
-                { id: 1, name: "Glifosato 48%", active: "Glifosato", category: "herbicida", dosisMin: 2, dosisMax: 4, unidad: "L/ha", dateCreated: "2026-05-02" }
-            ],
+                { id: 1, name: "Glifosato 48%", active: "Glifosato", category: "herbicida", marca: "Bayer", unidad: "L/ha", dateCreated: "2026-05-02" }
+            ]
             recipes: [],
             users: [
     { email: "admin@agro.com", password: "admin123", name: "Administrador", role: "admin", clientId: null },
@@ -1647,8 +1647,7 @@ const GOOGLE_CONFIG = {
             const nameIndex = headers.indexOf('Nombre');
             const activeIndex = headers.indexOf('PrincipioActivo');
             const categoryIndex = headers.indexOf('Categoria');
-            const minIndex = headers.indexOf('DosisMin');
-            const maxIndex = headers.indexOf('DosisMax');
+            const marcaIndex = headers.indexOf('Marca');
             const unitIndex = headers.indexOf('Unidad');
             
             if (nameIndex === -1) {
@@ -1660,8 +1659,7 @@ const GOOGLE_CONFIG = {
                 name: values[nameIndex],
                 active: activeIndex >= 0 ? values[activeIndex] : '',
                 category: categoryIndex >= 0 ? values[categoryIndex] : 'otros',
-                dosisMin: minIndex >= 0 ? parseFloat(values[minIndex]) || 0 : 0,
-                dosisMax: maxIndex >= 0 ? parseFloat(values[maxIndex]) || 0 : 0,
+                marca: marcaIndex >= 0 ? values[marcaIndex] : '',
                 unidad: unitIndex >= 0 ? values[unitIndex] : 'L/ha',
                 dateCreated: new Date().toISOString().split('T')[0]
             };
@@ -1727,15 +1725,14 @@ const GOOGLE_CONFIG = {
                 filename = 'lotes.csv';
             } else if (type === 'products') {
                 data = products.map(p => ({
-                    ID: p.id,
-                    Nombre: p.name,
-                    PrincipioActivo: p.active,
-                    Categoria: p.category,
-                    DosisMin: p.dosisMin,
-                    DosisMax: p.dosisMax,
-                    Unidad: p.unidad
-                }));
-                headers = ['ID', 'Nombre', 'PrincipioActivo', 'Categoria', 'DosisMin', 'DosisMax', 'Unidad'];
+    ID: p.id,
+    Nombre: p.name,
+    PrincipioActivo: p.active,
+    Categoria: p.category,
+    Marca: p.marca || '',
+    Unidad: p.unidad
+}));
+headers = ['ID', 'Nombre', 'PrincipioActivo', 'Categoria', 'Marca', 'Unidad'];
                 filename = 'productos.csv';
             }
             
@@ -2550,8 +2547,7 @@ const GOOGLE_CONFIG = {
             document.getElementById('productName').value = product.name;
             document.getElementById('productActive').value = product.active;
             document.getElementById('productCategory').value = product.category;
-            document.getElementById('productDosisMin').value = product.dosisMin;
-            document.getElementById('productDosisMax').value = product.dosisMax;
+            document.getElementById('productMarca').value = product.marca || '';
             document.getElementById('productUnidad').value = product.unidad;
             
             // Mostrar el formulario
@@ -2573,8 +2569,7 @@ const GOOGLE_CONFIG = {
             const name = document.getElementById('productName').value.trim();
             const active = document.getElementById('productActive').value.trim();
             const category = document.getElementById('productCategory').value;
-            const dosisMin = parseFloat(document.getElementById('productDosisMin').value) || 0;
-            const dosisMax = parseFloat(document.getElementById('productDosisMax').value) || 0;
+            const marca = document.getElementById('productMarca').value.trim();
             const unidad = document.getElementById('productUnidad').value;
             
             // Encontrar y actualizar el producto
@@ -2583,8 +2578,7 @@ const GOOGLE_CONFIG = {
                 products[productIndex].name = name;
                 products[productIndex].active = active;
                 products[productIndex].category = category;
-                products[productIndex].dosisMin = dosisMin;
-                products[productIndex].dosisMax = dosisMax;
+                products[productIndex].marca = marca;
                 products[productIndex].unidad = unidad;
                 
                 saveData();
@@ -2594,9 +2588,7 @@ const GOOGLE_CONFIG = {
                 document.getElementById('productName').value = '';
                 document.getElementById('productActive').value = '';
                 document.getElementById('productCategory').value = '';
-                document.getElementById('productDosisMin').value = '';
-                document.getElementById('productDosisMax').value = '';
-                document.getElementById('productUnidad').value = 'L/ha';
+                document.getElementById('productMarca').value = '';
                 document.getElementById('productForm').classList.add('hidden');
                 
                 const form = document.querySelector('#productForm form');
